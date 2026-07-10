@@ -97,8 +97,15 @@ class FalconextLogistica:
                 code = err_obj.get("code") or parsed.get("code")
             raise FalconextError(str(msg), status, str(code) if code is not None else None, parsed)
 
-        # La API envuelve en {"code", "message", "data"}.
-        if isinstance(parsed, dict) and "data" in parsed:
+        # La API pública devuelve el recurso limpio (contrato). Por
+        # compatibilidad, si llega el envelope interno {code, message, data},
+        # lo desenvolvemos.
+        if (
+            isinstance(parsed, dict)
+            and "code" in parsed
+            and "message" in parsed
+            and "data" in parsed
+        ):
             return parsed["data"]
         return parsed
 

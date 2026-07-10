@@ -256,8 +256,15 @@ export class FalconextLogistica {
       const code = json?.error?.code ?? json?.code;
       throw new FalconextError(String(msg), res.status, code != null ? String(code) : undefined, json);
     }
-    // La API envuelve en { code, message, data }.
-    const data = json && "data" in json ? json.data : json;
+    // La API pública devuelve el recurso limpio (contrato). Por compatibilidad,
+    // si llega el envelope interno { code, message, data }, lo desenvolvemos.
+    const isEnvelope =
+      !!json &&
+      typeof json === "object" &&
+      "code" in json &&
+      "message" in json &&
+      "data" in json;
+    const data = isEnvelope ? (json as { data: unknown }).data : json;
     return camelize<T>(data);
   }
 
