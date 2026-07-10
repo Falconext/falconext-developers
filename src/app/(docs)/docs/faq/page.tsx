@@ -9,11 +9,11 @@ export const metadata: Metadata = {
 const faqs: FaqItem[] = [
   {
     q: "¿Necesito una cuenta para probar la API?",
-    a: "Sí. Crea una cuenta gratuita en la consola y genera una API key de pruebas (fx_test_) para usar el Sandbox sin costo ni efectos reales.",
+    a: "Sí. Crea una cuenta gratuita en la consola y genera una API key de pruebas (sk_test_) para usar el Sandbox sin costo ni efectos reales.",
   },
   {
     q: "¿Cuál es la diferencia entre Sandbox y Producción?",
-    a: "Sandbox usa claves fx_test_ y simula entregas: ideal para desarrollar. Producción usa claves fx_live_ y genera entregas reales. El código es idéntico; solo cambian la key y el host.",
+    a: "Sandbox usa claves sk_test_ y simula entregas: ideal para desarrollar. Producción usa claves sk_live_ y genera entregas reales. El código es idéntico; solo cambian la key y el host.",
   },
   {
     q: "¿Debo hacer polling para conocer el estado de una entrega?",

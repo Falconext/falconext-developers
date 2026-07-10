@@ -31,7 +31,7 @@ export default async function SandboxPage() {
       </header>
 
       <Callout type="tip" title="Usa una API key de pruebas">
-        Genera una clave <code>fx_test_…</code> desde la consola. Las solicitudes se envían
+        Genera una clave <code>sk_test_…</code> desde la consola. Las solicitudes se envían
         desde tu navegador al entorno seleccionado; nunca pasan por Falconext Developers.
       </Callout>
 

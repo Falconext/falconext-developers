@@ -55,8 +55,8 @@ export default function PostmanPage() {
         lang="json"
         filename="Variables del entorno"
         code={`{
-  "baseUrl": "https://sandbox.api.falconext.com/v1",
-  "apiKey":  "fx_test_••••••••"
+  "baseUrl": "https://api.falconext.pe/api/v1/logistics",
+  "apiKey":  "sk_test_••••••••"
 }`}
       />
 

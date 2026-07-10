@@ -11,7 +11,7 @@ export const siteConfig = {
     id: "logistica",
     name: "Falconext Logística",
   },
-  apiBaseUrl: "https://api.falconext.com",
+  apiBaseUrl: "https://api.falconext.pe",
   currentApiVersion: "2025-07-01",
   links: {
     dashboard: "https://app.falconext.com",

@@ -14,7 +14,7 @@ Recetas cortas para tareas comunes. Cópialas y adáptalas a tu proyecto.
 ## Listar pedidos en tránsito
 
 ```bash
-curl "https://api.falconext.com/v1/orders?status=in_transit&limit=20" \
+curl "https://api.falconext.pe/api/v1/logistics/orders?status=in_transit&limit=20" \
   -H "Authorization: Bearer $FALCONEXT_API_KEY"
 ```
 
@@ -45,7 +45,7 @@ app.post("/webhooks/falconext",
 ## Cancelar un pedido
 
 ```bash
-curl -X POST https://api.falconext.com/v1/orders/ord_3xK8p2Qm/cancel \
+curl -X POST https://api.falconext.pe/api/v1/logistics/orders/ord_3xK8p2Qm/cancel \
   -H "Authorization: Bearer $FALCONEXT_API_KEY"
 ```
 

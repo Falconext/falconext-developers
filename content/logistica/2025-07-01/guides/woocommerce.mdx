@@ -18,7 +18,7 @@ Crea un pedido en Falconext cuando una orden de WooCommerce pasa a "procesando".
     function fx_create_order($order_id) {
       $order = wc_get_order($order_id);
 
-      wp_remote_post('https://api.falconext.com/v1/orders', [
+      wp_remote_post('https://api.falconext.pe/api/v1/logistics/orders', [
         'headers' => [
           'Authorization' => 'Bearer ' . FALCONEXT_API_KEY,
           'Content-Type'  => 'application/json',

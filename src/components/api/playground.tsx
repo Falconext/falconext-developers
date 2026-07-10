@@ -170,7 +170,7 @@ export function Playground({ data }: { data: PlaygroundData }) {
                 type={showKey ? "text" : "password"}
                 value={apiKey}
                 onChange={(e) => setApiKey(e.target.value)}
-                placeholder="fx_test_…"
+                placeholder="sk_test_…"
                 autoComplete="off"
                 spellCheck={false}
                 className="h-10 flex-1 bg-transparent font-mono text-sm text-fg outline-none placeholder:text-subtle"

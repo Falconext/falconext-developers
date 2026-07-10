@@ -5,8 +5,8 @@ import { CodeBlock } from "@/components/ui/code-block";
 import { DeliveryRail } from "@/components/brand/delivery-rail";
 import { siteConfig } from "@/config/site";
 
-const requestSample = `curl https://api.falconext.com/v1/orders \\
-  -H "Authorization: Bearer fx_live_••••••••" \\
+const requestSample = `curl https://api.falconext.pe/api/v1/logistics/orders \\
+  -H "Authorization: Bearer sk_live_••••••••" \\
   -H "Content-Type: application/json" \\
   -d '{
     "external_order_id": "ORD-10482",

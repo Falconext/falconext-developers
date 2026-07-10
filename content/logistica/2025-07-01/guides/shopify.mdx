@@ -18,7 +18,7 @@ Shopify.
     ```javascript
     // handler del webhook orders/paid de Shopify
     export async function onOrderPaid(order) {
-      await fetch("https://api.falconext.com/v1/orders", {
+      await fetch("https://api.falconext.pe/api/v1/logistics/orders", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${process.env.FALCONEXT_API_KEY}`,

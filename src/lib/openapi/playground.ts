@@ -50,7 +50,7 @@ export type PlaygroundData = PlaygroundMeta & {
 /** Servers declarados en la spec (producción/sandbox). Nunca hardcodeado. */
 export function extractServers(doc: OpenApiDocument): { url: string; description?: string }[] {
   const servers = doc.servers?.filter((s) => Boolean(s?.url));
-  return servers?.length ? servers : [{ url: "https://api.falconext.com/v1" }];
+  return servers?.length ? servers : [{ url: "https://api.falconext.pe/api/v1/logistics" }];
 }
 
 /**

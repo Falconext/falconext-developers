@@ -8,8 +8,7 @@
     "contact": { "name": "Falconext Developers", "email": "developers@falconext.com" }
   },
   "servers": [
-    { "url": "https://api.falconext.com/v1", "description": "Producción" },
-    { "url": "https://sandbox.api.falconext.com/v1", "description": "Sandbox" }
+    { "url": "https://api.falconext.pe/api/v1/logistics", "description": "Producción" }
   ],
   "security": [{ "bearerAuth": [] }],
   "tags": [

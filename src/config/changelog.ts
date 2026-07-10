@@ -30,7 +30,7 @@ export const changelog: ChangelogEntry[] = [
     version: "2025-03-02",
     changes: [
       { type: "breaking", text: "El campo status_code se renombró a status en el recurso Order." },
-      { type: "added", text: "Entorno Sandbox con claves fx_test_." },
+      { type: "added", text: "Entorno Sandbox con claves sk_test_." },
     ],
   },
 ];

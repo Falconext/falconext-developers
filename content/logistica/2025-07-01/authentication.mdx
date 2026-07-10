@@ -12,11 +12,11 @@ entorno y lleva un prefijo que indica su tipo.
 
 | Prefijo | Entorno | Uso |
 | --- | --- | --- |
-| `fx_test_…` | Sandbox | Pruebas, sin efectos reales |
-| `fx_live_…` | Producción | Entregas reales |
+| `sk_test_…` | Sandbox | Pruebas, sin efectos reales |
+| `sk_live_…` | Producción | Entregas reales |
 
 <Callout type="danger" title="Trata tus keys como contraseñas">
-Nunca expongas una `fx_live_` en el frontend, apps móviles o repositorios. Úsala solo en
+Nunca expongas una `sk_live_` en el frontend, apps móviles o repositorios. Úsala solo en
 tu servidor. Si se filtra, revócala de inmediato desde la consola.
 </Callout>
 
@@ -25,7 +25,7 @@ tu servidor. Si se filtra, revócala de inmediato desde la consola.
 Envía la key en la cabecera `Authorization` como Bearer token:
 
 ```bash
-curl https://api.falconext.com/v1/orders \
+curl https://api.falconext.pe/api/v1/logistics/orders \
   -H "Authorization: Bearer $FALCONEXT_API_KEY"
 ```
 
@@ -45,11 +45,11 @@ Una key ausente o inválida devuelve `401 Unauthorized`:
 
 <Steps>
   <Step title="Empieza en Sandbox">
-    Usa una key `fx_test_` contra `https://sandbox.api.falconext.com/v1`. Los pedidos son
+    Usa una key `sk_test_` contra `https://api.falconext.pe/api/v1/logistics`. Los pedidos son
     simulados y no generan costos ni movimientos reales.
   </Step>
   <Step title="Pasa a Producción">
-    Cambia a una key `fx_live_` y al host `https://api.falconext.com/v1`. El resto de tu
+    Cambia a una key `sk_live_` y al host `https://api.falconext.pe/api/v1/logistics`. El resto de tu
     código no cambia.
   </Step>
 </Steps>

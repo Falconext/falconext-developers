@@ -21,7 +21,7 @@ Crea pedidos en Falconext directamente desde los pedidos de venta de Odoo.
     def _create_falconext_order(self):
         for order in self:
             requests.post(
-                "https://api.falconext.com/v1/orders",
+                "https://api.falconext.pe/api/v1/logistics/orders",
                 headers={"Authorization": f"Bearer {API_KEY}"},
                 json={
                     "external_order_id": order.name,
