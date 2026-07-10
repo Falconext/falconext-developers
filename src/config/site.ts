@@ -14,7 +14,9 @@ export const siteConfig = {
   apiBaseUrl: "https://api.falconext.pe",
   currentApiVersion: "2025-07-01",
   links: {
-    dashboard: "https://app.falconext.com",
+    // TODO: cambiar por la URL del console cuando exista (app.falconext.pe o similar).
+    // Por ahora apunta al inicio del onboarding.
+    dashboard: "/logistica/2025-07-01/getting-started",
     status: "https://status.falconext.com",
     support: "mailto:developers@falconext.com",
     website: "https://falconext.com",

@@ -82,7 +82,7 @@ export function Navbar() {
           </Link>
           <ThemeToggle />
           <Button href={siteConfig.links.dashboard} size="sm" className="hidden sm:inline-flex">
-            Consola
+            Comenzar
           </Button>
           <button
             type="button"
