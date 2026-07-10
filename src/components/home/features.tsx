@@ -1,4 +1,5 @@
 import { KeyRound, Webhook, Package, FlaskConical, FileJson, Gauge } from "lucide-react";
+import { Reveal, StaggerGroup, StaggerItem } from "@/components/motion/reveal";
 
 const features = [
   {
@@ -36,28 +37,33 @@ const features = [
 export function Features() {
   return (
     <section className="mx-auto max-w-[1400px] px-4 py-20 sm:px-6">
-      <div className="max-w-2xl">
-        <p className="eyebrow mb-3">Por qué Falconext</p>
-        <h2 className="text-balance font-display text-[2rem] font-semibold tracking-tight sm:text-[2.4rem]">
-          Diseñada para que integrar sea lo fácil
-        </h2>
-        <p className="mt-4 text-muted">
-          Una API REST predecible, documentación que nunca queda desactualizada y las
-          herramientas para llevar tu integración de la idea a producción.
-        </p>
-      </div>
+      <Reveal>
+        <div className="max-w-2xl">
+          <p className="eyebrow mb-3">Por qué Falconext</p>
+          <h2 className="text-balance font-display text-[2rem] font-semibold tracking-tight sm:text-[2.4rem]">
+            Diseñada para que integrar sea lo fácil
+          </h2>
+          <p className="mt-4 text-muted">
+            Una API REST predecible, documentación que nunca queda desactualizada y las
+            herramientas para llevar tu integración de la idea a producción.
+          </p>
+        </div>
+      </Reveal>
 
-      <div className="mt-12 grid gap-px overflow-hidden rounded-2xl border border-app bg-border sm:grid-cols-2 lg:grid-cols-3">
+      <StaggerGroup
+        className="mt-12 grid gap-px overflow-hidden rounded-2xl border border-app bg-border sm:grid-cols-2 lg:grid-cols-3"
+        stagger={0.05}
+      >
         {features.map((f) => (
-          <div key={f.title} className="group bg-app p-6 transition-colors hover:bg-subtle">
+          <StaggerItem key={f.title} className="group bg-app p-6 transition-colors hover:bg-subtle">
             <div className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-lg border border-app bg-elevated text-violet-400 transition-colors group-hover:border-violet-500/40">
               <f.icon className="h-5 w-5" />
             </div>
             <h3 className="mb-1.5 font-display text-[1.05rem] font-semibold text-fg">{f.title}</h3>
             <p className="text-sm leading-relaxed text-muted">{f.body}</p>
-          </div>
+          </StaggerItem>
         ))}
-      </div>
+      </StaggerGroup>
     </section>
   );
 }

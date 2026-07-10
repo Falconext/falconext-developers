@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowUpRight, Truck, Boxes, ReceiptText, ShoppingBag, Users, Store, type LucideIcon } from "lucide-react";
 import { products, productHref } from "@/config/products";
 import { Badge } from "@/components/ui/badge";
+import { Reveal, StaggerGroup, StaggerItem } from "@/components/motion/reveal";
 
 const icons: Record<string, LucideIcon> = { Truck, Boxes, ReceiptText, ShoppingBag, Users, Store };
 
@@ -14,23 +15,25 @@ const statusMeta = {
 export function Ecosystem() {
   return (
     <section id="ecosistema" className="mx-auto max-w-[1400px] px-4 py-20 sm:px-6">
-      <div className="max-w-2xl">
-        <p className="eyebrow mb-3">El ecosistema Falconext</p>
-        <h2 className="text-balance font-display text-[2rem] font-semibold tracking-tight sm:text-[2.4rem]">
-          Una plataforma, muchas APIs
-        </h2>
-        <p className="mt-4 text-muted">
-          Empieza con Logística e integra el resto del ecosistema a medida que crece tu
-          operación. Todas las APIs comparten autenticación, convenciones y este portal.
-        </p>
-      </div>
+      <Reveal>
+        <div className="max-w-2xl">
+          <p className="eyebrow mb-3">El ecosistema Falconext</p>
+          <h2 className="text-balance font-display text-[2rem] font-semibold tracking-tight sm:text-[2.4rem]">
+            Una plataforma, muchas APIs
+          </h2>
+          <p className="mt-4 text-muted">
+            Empieza con Logística e integra el resto del ecosistema a medida que crece tu
+            operación. Todas las APIs comparten autenticación, convenciones y este portal.
+          </p>
+        </div>
+      </Reveal>
 
-      <div className="mt-12 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <StaggerGroup className="mt-12 grid gap-3 sm:grid-cols-2 lg:grid-cols-3" stagger={0.06}>
         {products.map((product) => {
           const Icon = icons[product.icon] ?? Truck;
           const meta = statusMeta[product.status];
           const documented = product.versions.length > 0;
-          const className = `group relative flex flex-col gap-3 rounded-card border border-app bg-surface p-6 transition-all ${documented ? "hover:border-violet-500/40 hover:bg-elevated" : "opacity-70"}`;
+          const className = `group relative flex h-full flex-col gap-3 rounded-card border border-app bg-surface p-6 transition-colors ${documented ? "hover:border-violet-500/40 hover:bg-elevated" : "opacity-70"}`;
           const inner = (
             <>
               <div className="flex items-start justify-between">
@@ -55,17 +58,19 @@ export function Ecosystem() {
               </div>
             </>
           );
-          return documented ? (
-            <Link key={product.id} href={productHref(product)} className={className}>
-              {inner}
-            </Link>
-          ) : (
-            <div key={product.id} className={className}>
-              {inner}
-            </div>
+          return (
+            <StaggerItem key={product.id} hover={documented}>
+              {documented ? (
+                <Link href={productHref(product)} className={className}>
+                  {inner}
+                </Link>
+              ) : (
+                <div className={className}>{inner}</div>
+              )}
+            </StaggerItem>
           );
         })}
-      </div>
+      </StaggerGroup>
     </section>
   );
 }
