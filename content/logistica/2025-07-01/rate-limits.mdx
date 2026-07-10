@@ -1,0 +1,50 @@
+---
+title: Rate limits
+description: Límites de tasa de la API de Falconext y cómo manejarlos.
+group: Introducción
+order: 3
+---
+
+La API aplica límites de tasa para proteger el servicio. Los valores son ilustrativos;
+consulta tu plan en la consola para los límites vigentes.
+
+| Recurso | Límite | Ventana |
+| --- | --- | --- |
+| Lectura (`GET`) | 600 req | por minuto |
+| Escritura (`POST`, `PUT`, `PATCH`, `DELETE`) | 120 req | por minuto |
+| Webhooks entrantes | sin límite | — |
+
+## Cabeceras de límite
+
+Cada respuesta incluye tu estado actual de cuota:
+
+```http
+RateLimit-Limit: 120
+RateLimit-Remaining: 118
+RateLimit-Reset: 43
+```
+
+## Cuando superas el límite
+
+Recibirás `429 Too Many Requests`. Respeta la cabecera `Retry-After` (en segundos):
+
+```json
+{
+  "error": {
+    "type": "rate_limit_error",
+    "code": "too_many_requests",
+    "message": "Superaste el límite de solicitudes. Reintenta en 43 segundos."
+  }
+}
+```
+
+<Callout type="tip" title="Reintenta con backoff exponencial">
+Implementa reintentos con jitter: espera `Retry-After`, y ante errores `5xx` duplica el
+tiempo entre intentos (1s, 2s, 4s…) hasta un máximo razonable.
+</Callout>
+
+## Buenas prácticas
+
+- Usa **webhooks** en vez de *polling* para conocer el estado de los pedidos.
+- Agrupa operaciones y evita ráfagas innecesarias.
+- Cachea respuestas que no cambian con frecuencia.

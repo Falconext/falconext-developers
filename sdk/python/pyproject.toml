@@ -1,0 +1,20 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "falconext-logistica"
+version = "0.1.0"
+description = "SDK oficial de Falconext Logística para Python."
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text = "MIT" }
+keywords = ["falconext", "logistica", "logistics", "delivery", "sdk", "peru"]
+authors = [{ name = "Falconext" }]
+dependencies = []
+
+[project.urls]
+Documentation = "https://developers.falconext.com"
+
+[tool.hatch.build.targets.wheel]
+packages = ["falconext_logistica"]

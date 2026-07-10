@@ -1,0 +1,311 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Falconext Logística API",
+    "version": "2025-07-01",
+    "x-status": "PLANTILLA ALINEADA AL DOMINIO REAL de falconext-mype (módulo logística: PedidoLogistica, ciclo EstadoPedidoLogistica, prueba de entrega, COD). Es una fachada en inglés sobre los modelos internos en español. Valídala y/o genérala desde el backend (@nestjs/swagger) antes de publicar.",
+    "description": "API REST para crear, rastrear y gestionar pedidos de entrega (last-mile). Un pedido (Order) representa un envío a un cliente final: se crea, se asigna a un despacho/ruta, se recoge, viaja y se entrega con prueba de entrega. Cada cambio de estado emite un webhook.",
+    "contact": { "name": "Falconext Developers", "email": "developers@falconext.com" }
+  },
+  "servers": [
+    { "url": "https://api.falconext.com/v1", "description": "Producción" },
+    { "url": "https://sandbox.api.falconext.com/v1", "description": "Sandbox" }
+  ],
+  "security": [{ "bearerAuth": [] }],
+  "tags": [
+    { "name": "Pedidos", "description": "Crea, consulta y gestiona pedidos de entrega." },
+    { "name": "Rastreo", "description": "Estado en tiempo real, ubicación y prueba de entrega." },
+    { "name": "Webhooks", "description": "Endpoints que reciben los eventos del ciclo de vida." }
+  ],
+  "paths": {
+    "/orders": {
+      "post": {
+        "tags": ["Pedidos"],
+        "summary": "Crear un pedido",
+        "description": "Registra un nuevo pedido de entrega y devuelve su identificador y código de rastreo.",
+        "operationId": "createOrder",
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/OrderCreate" } } }
+        },
+        "responses": {
+          "201": { "description": "Pedido creado", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Order" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "422": { "$ref": "#/components/responses/ValidationError" }
+        }
+      },
+      "get": {
+        "tags": ["Pedidos"],
+        "summary": "Listar pedidos",
+        "operationId": "listOrders",
+        "parameters": [
+          { "name": "status", "in": "query", "description": "Filtra por estado del pedido.", "schema": { "$ref": "#/components/schemas/OrderStatus" } },
+          { "name": "source", "in": "query", "description": "Filtra por origen del pedido.", "schema": { "$ref": "#/components/schemas/OrderSource" } },
+          { "name": "limit", "in": "query", "description": "Máximo de resultados (1–100).", "schema": { "type": "integer", "default": 20, "maximum": 100 } },
+          { "name": "starting_after", "in": "query", "description": "Cursor de paginación (id del último resultado).", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Lista de pedidos", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/OrderList" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/orders/{id}": {
+      "get": {
+        "tags": ["Pedidos"],
+        "summary": "Obtener un pedido",
+        "operationId": "getOrder",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "description": "ID del pedido (o su tracking_code).", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Pedido", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Order" } } } },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/orders/{id}/cancel": {
+      "post": {
+        "tags": ["Pedidos"],
+        "summary": "Cancelar un pedido",
+        "description": "Cancela un pedido que aún no ha sido entregado. Emite el evento order.cancelled.",
+        "operationId": "cancelOrder",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": { "application/json": { "schema": { "type": "object", "properties": { "reason": { "type": "string", "description": "Motivo de la cancelación." } } } } }
+        },
+        "responses": {
+          "200": { "description": "Pedido cancelado", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Order" } } } },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "description": "El pedido ya no puede cancelarse (p. ej. ya fue entregado).", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/orders/{id}/tracking": {
+      "get": {
+        "tags": ["Rastreo"],
+        "summary": "Rastrear un pedido",
+        "description": "Devuelve el estado actual, la ubicación del repartidor, el ETA y la línea de tiempo de eventos.",
+        "operationId": "trackOrder",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Estado de rastreo", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Tracking" } } } },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/orders/{id}/proof": {
+      "get": {
+        "tags": ["Rastreo"],
+        "summary": "Obtener la prueba de entrega",
+        "description": "Prueba de entrega de un pedido entregado: receptor, firma, fotos y monto cobrado (COD).",
+        "operationId": "getProofOfDelivery",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Prueba de entrega", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ProofOfDelivery" } } } },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/webhook_endpoints": {
+      "post": {
+        "tags": ["Webhooks"],
+        "summary": "Registrar un endpoint de webhook",
+        "operationId": "createWebhookEndpoint",
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/WebhookEndpointCreate" } } }
+        },
+        "responses": {
+          "201": { "description": "Endpoint registrado", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/WebhookEndpoint" } } } },
+          "422": { "$ref": "#/components/responses/ValidationError" }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": { "type": "http", "scheme": "bearer", "bearerFormat": "API Key", "description": "Usa tu API key como Bearer token: `Authorization: Bearer fx_live_…`." }
+    },
+    "responses": {
+      "Unauthorized": { "description": "API key ausente o inválida", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+      "NotFound": { "description": "Recurso no encontrado", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+      "ValidationError": { "description": "Parámetros inválidos", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+    },
+    "schemas": {
+      "OrderStatus": {
+        "type": "string",
+        "description": "Estado del pedido en su ciclo de vida (fachada de EstadoPedidoLogistica).",
+        "enum": ["pending", "validated", "assigned", "ready_for_pickup", "picked_up", "in_transit", "arriving", "at_location", "delivered", "partially_delivered", "failed", "returned", "rescheduled", "cancelled"]
+      },
+      "OrderSource": {
+        "type": "string",
+        "description": "Origen por el que se creó el pedido (fachada de OrigenPedidoLogistica).",
+        "enum": ["manual", "excel", "api", "webhook", "ecommerce", "falconext_erp", "falconext"]
+      },
+      "Customer": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name": { "type": "string", "description": "Nombre del cliente final.", "example": "María Fernández" },
+          "document_type": { "type": "string", "description": "Tipo de documento (DNI, RUC, CE…).", "example": "DNI" },
+          "document_number": { "type": "string", "example": "70123456" },
+          "email": { "type": "string", "format": "email", "example": "maria@example.com" },
+          "phone": { "type": "string", "example": "+51987654321" },
+          "whatsapp": { "type": "string", "example": "+51987654321" }
+        }
+      },
+      "Address": {
+        "type": "object",
+        "required": ["address"],
+        "properties": {
+          "label": { "type": "string", "description": "Etiqueta de la dirección.", "example": "Casa" },
+          "address": { "type": "string", "description": "Dirección en texto.", "example": "Calle Los Pinos 120, Miraflores" },
+          "district": { "type": "string", "example": "Miraflores" },
+          "city": { "type": "string", "example": "Lima" },
+          "department": { "type": "string", "example": "Lima" },
+          "lat": { "type": "number", "format": "double", "example": -12.1211 },
+          "lng": { "type": "number", "format": "double", "example": -77.0296 },
+          "reference": { "type": "string", "description": "Referencia para ubicar el lugar.", "example": "Frente al parque" },
+          "access_notes": { "type": "string", "description": "Notas de acceso.", "example": "Dejar en conserjería" }
+        }
+      },
+      "OrderItem": {
+        "type": "object",
+        "required": ["description"],
+        "properties": {
+          "sku": { "type": "string", "example": "TSHIRT-M-BLK" },
+          "description": { "type": "string", "example": "Polo talla M negro" },
+          "quantity": { "type": "integer", "default": 1, "example": 2 },
+          "weight_kg": { "type": "number", "format": "double", "example": 0.3 },
+          "declared_value": { "type": "number", "format": "double", "example": 59.9 }
+        }
+      },
+      "TimeWindow": {
+        "type": "object",
+        "description": "Ventana horaria de entrega (HH:mm).",
+        "properties": {
+          "start": { "type": "string", "example": "09:00" },
+          "end": { "type": "string", "example": "13:00" }
+        }
+      },
+      "OrderCreate": {
+        "type": "object",
+        "required": ["customer", "delivery_address"],
+        "properties": {
+          "external_order_id": { "type": "string", "description": "Tu identificador externo (nº de orden en tu sistema).", "example": "ORD-10482" },
+          "source": { "$ref": "#/components/schemas/OrderSource" },
+          "customer": { "$ref": "#/components/schemas/Customer" },
+          "delivery_address": { "$ref": "#/components/schemas/Address" },
+          "items": { "type": "array", "items": { "$ref": "#/components/schemas/OrderItem" } },
+          "requested_date": { "type": "string", "format": "date-time", "description": "Fecha solicitada de entrega.", "example": "2025-07-02T00:00:00Z" },
+          "time_window": { "$ref": "#/components/schemas/TimeWindow" },
+          "priority": { "type": "integer", "description": "1: baja, 2: normal, 3: alta.", "default": 1, "example": 2 },
+          "is_urgent": { "type": "boolean", "default": false },
+          "requires_signature": { "type": "boolean", "default": true },
+          "requires_photo": { "type": "boolean", "default": false },
+          "cash_on_delivery": { "type": "number", "format": "double", "description": "Monto a cobrar contra entrega (COD). 0 si no aplica.", "example": 120.0 },
+          "customer_notes": { "type": "string", "example": "Llamar al llegar." },
+          "metadata": { "type": "object", "additionalProperties": true, "description": "Pares clave-valor propios." }
+        }
+      },
+      "Order": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "example": "ord_3xK8p2Qm" },
+          "object": { "type": "string", "example": "order" },
+          "tracking_code": { "type": "string", "description": "Código público de rastreo.", "example": "FX-7Q2M8K" },
+          "external_order_id": { "type": "string", "example": "ORD-10482" },
+          "source": { "$ref": "#/components/schemas/OrderSource" },
+          "status": { "$ref": "#/components/schemas/OrderStatus" },
+          "customer": { "$ref": "#/components/schemas/Customer" },
+          "delivery_address": { "$ref": "#/components/schemas/Address" },
+          "items": { "type": "array", "items": { "$ref": "#/components/schemas/OrderItem" } },
+          "weight_kg": { "type": "number", "format": "double", "description": "Peso total del pedido.", "example": 0.6 },
+          "packages": { "type": "integer", "description": "Número de bultos.", "example": 1 },
+          "cash_on_delivery": { "type": "number", "format": "double", "example": 120.0 },
+          "shipping_cost": { "type": "number", "format": "double", "description": "Costo de envío calculado.", "example": 12.5 },
+          "created_at": { "type": "string", "format": "date-time", "example": "2025-07-01T14:03:11Z" },
+          "updated_at": { "type": "string", "format": "date-time", "example": "2025-07-01T14:03:11Z" }
+        }
+      },
+      "OrderList": {
+        "type": "object",
+        "properties": {
+          "object": { "type": "string", "example": "list" },
+          "data": { "type": "array", "items": { "$ref": "#/components/schemas/Order" } },
+          "has_more": { "type": "boolean", "example": false }
+        }
+      },
+      "TrackingEvent": {
+        "type": "object",
+        "properties": {
+          "status": { "$ref": "#/components/schemas/OrderStatus" },
+          "occurred_at": { "type": "string", "format": "date-time", "example": "2025-07-01T14:40:02Z" },
+          "lat": { "type": "number", "format": "double", "example": -12.0912 },
+          "lng": { "type": "number", "format": "double", "example": -77.0219 }
+        }
+      },
+      "Tracking": {
+        "type": "object",
+        "properties": {
+          "status": { "$ref": "#/components/schemas/OrderStatus" },
+          "courier": { "type": "object", "properties": { "name": { "type": "string", "example": "Repartidor" }, "lat": { "type": "number", "format": "double", "example": -12.0951 }, "lng": { "type": "number", "format": "double", "example": -77.0245 } } },
+          "eta_minutes": { "type": "integer", "example": 12 },
+          "timeline": { "type": "array", "items": { "$ref": "#/components/schemas/TrackingEvent" } }
+        }
+      },
+      "ProofOfDelivery": {
+        "type": "object",
+        "properties": {
+          "receiver_name": { "type": "string", "example": "María Fernández" },
+          "receiver_document": { "type": "string", "example": "70123456" },
+          "relationship": { "type": "string", "description": "Parentesco de quién recibió.", "example": "Titular" },
+          "signature_url": { "type": "string", "format": "uri", "example": "https://cdn.falconext.com/pod/sig_9Q2m.png" },
+          "photo_urls": { "type": "array", "items": { "type": "string", "format": "uri" } },
+          "collected_amount": { "type": "number", "format": "double", "description": "Monto cobrado (COD).", "example": 120.0 },
+          "payment_method": { "type": "string", "example": "efectivo" },
+          "delivered_at": { "type": "string", "format": "date-time", "example": "2025-07-01T15:12:44Z" }
+        }
+      },
+      "WebhookEndpointCreate": {
+        "type": "object",
+        "required": ["url", "events"],
+        "properties": {
+          "url": { "type": "string", "format": "uri", "example": "https://tu-app.com/webhooks/falconext" },
+          "events": { "type": "array", "items": { "type": "string" }, "example": ["order.delivered", "order.failed"] }
+        }
+      },
+      "WebhookEndpoint": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "example": "whe_9Q2m" },
+          "url": { "type": "string", "format": "uri" },
+          "secret": { "type": "string", "example": "whsec_…", "description": "Úsalo para verificar la firma HMAC." },
+          "events": { "type": "array", "items": { "type": "string" } }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "object",
+            "properties": {
+              "type": { "type": "string", "example": "invalid_request_error" },
+              "code": { "type": "string", "example": "parameter_missing" },
+              "message": { "type": "string", "example": "El campo delivery_address es obligatorio." },
+              "param": { "type": "string", "example": "delivery_address" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

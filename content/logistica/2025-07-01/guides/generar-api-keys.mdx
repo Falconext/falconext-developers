@@ -1,0 +1,40 @@
+---
+title: Generar API Keys
+description: Crea y administra las API keys de Falconext por entorno.
+group: Guías
+order: 30
+---
+
+Las API keys autentican tus solicitudes. Esta guía te muestra cómo crearlas, rotarlas y
+revocarlas de forma segura.
+
+<Steps>
+  <Step title="Abre la consola">
+    Ingresa a la [consola de Falconext](https://app.falconext.com) y ve a
+    **Desarrolladores → API Keys**.
+  </Step>
+  <Step title="Crea una key de pruebas">
+    Genera una clave <code>fx_test_</code> para el entorno Sandbox. Cópiala en ese momento:
+    por seguridad, no volveremos a mostrarla completa.
+  </Step>
+  <Step title="Guárdala en una variable de entorno">
+    Nunca la incrustes en el código ni la subas al repositorio.
+
+    ```bash
+    export FALCONEXT_API_KEY="fx_test_••••••••"
+    ```
+  </Step>
+  <Step title="Pasa a producción">
+    Cuando estés listo, crea una clave <code>fx_live_</code> y cambia el host a
+    <code>api.falconext.com</code>.
+  </Step>
+</Steps>
+
+<Callout type="danger" title="Si una key se filtra">
+Revócala de inmediato desde la consola. Al usar varias keys activas puedes rotarlas sin
+downtime: crea la nueva, despliega y revoca la anterior.
+</Callout>
+
+## Siguiente
+
+<LinkCard href="/logistica/2025-07-01/guides/integrar-rest" title="Integrar por REST" description="Tu primera llamada autenticada a la API." />

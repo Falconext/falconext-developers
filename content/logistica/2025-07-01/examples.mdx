@@ -1,0 +1,55 @@
+---
+title: Ejemplos
+description: Recetas listas para copiar sobre casos comunes con la API de Falconext.
+group: API
+order: 11
+---
+
+Recetas cortas para tareas comunes. Cópialas y adáptalas a tu proyecto.
+
+## Crear un pedido
+
+<CreateOrderExample />
+
+## Listar pedidos en tránsito
+
+```bash
+curl "https://api.falconext.com/v1/orders?status=in_transit&limit=20" \
+  -H "Authorization: Bearer $FALCONEXT_API_KEY"
+```
+
+## Recibir y verificar un webhook (Express)
+
+```javascript
+import express from "express";
+import { verifySignature } from "./verify.js";
+
+const app = express();
+
+app.post("/webhooks/falconext",
+  express.raw({ type: "application/json" }),
+  (req, res) => {
+    const signature = req.header("Falconext-Signature");
+    if (!verifySignature(req.body, signature, process.env.WEBHOOK_SECRET)) {
+      return res.status(400).send("firma inválida");
+    }
+    const event = JSON.parse(req.body);
+    if (event.event === "order.delivered") {
+      // marca la orden como entregada
+    }
+    res.sendStatus(200);
+  },
+);
+```
+
+## Cancelar un pedido
+
+```bash
+curl -X POST https://api.falconext.com/v1/orders/ord_3xK8p2Qm/cancel \
+  -H "Authorization: Bearer $FALCONEXT_API_KEY"
+```
+
+<Callout type="tip" title="Más recetas">
+¿Buscas un caso concreto? Revisa las [guías](/logistica/2025-07-01/guides/integrar-rest) o
+escríbenos en [soporte](/docs/soporte).
+</Callout>

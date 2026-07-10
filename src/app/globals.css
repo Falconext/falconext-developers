@@ -1,0 +1,253 @@
+@import "tailwindcss";
+
+/* Dark mode gobernado por la clase .dark (next-themes, strategy="class"). */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ------------------------------------------------------------------ *
+ * Tokens de marca Falconext Developers
+ * Violeta primario (#8A38F5) + ámbar de "señal" (#FFAB00) sobre tinta.
+ * El mono se usa como voz de datos/API; Space Grotesk como display.
+ * ------------------------------------------------------------------ */
+@theme {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-space-grotesk), var(--font-inter), sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, "SFMono-Regular", monospace;
+
+  /* Escala violeta de marca */
+  --color-violet-50: #f4ecff;
+  --color-violet-100: #e6d5ff;
+  --color-violet-200: #cdaaff;
+  --color-violet-300: #b17dff;
+  --color-violet-400: #9a55f8;
+  --color-violet-500: #8a38f5;
+  --color-violet-600: #7420e0;
+  --color-violet-700: #5a0ebb;
+  --color-violet-800: #430b8c;
+  --color-violet-900: #2d0a5c;
+
+  /* Ámbar de señal */
+  --color-amber-signal: #ffab00;
+  --color-amber-soft: #ffc94d;
+
+  /* Estados del ciclo de vida de entregas */
+  --color-track-idle: #52525b;
+  --color-track-live: #ffab00;
+  --color-track-done: #34d399;
+  --color-track-fail: #fb7185;
+
+  /* Tinta base */
+  --color-ink-950: #08080c;
+  --color-ink-900: #0b0b12;
+  --color-ink-850: #101019;
+  --color-ink-800: #14141f;
+  --color-ink-700: #1c1c2a;
+  --color-ink-600: #262636;
+
+  --radius-card: 0.875rem;
+  --radius-sm: 0.5rem;
+
+  --shadow-glow: 0 0 0 1px rgba(138, 56, 245, 0.25), 0 8px 40px -12px rgba(138, 56, 245, 0.45);
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 24px -12px rgba(0, 0, 0, 0.12);
+}
+
+/* ------------------------------------------------------------------ *
+ * Variables semánticas (light por defecto, override en .dark)
+ * ------------------------------------------------------------------ */
+:root {
+  --bg: #ffffff;
+  --bg-subtle: #fbf9ff;
+  --bg-elevated: #ffffff;
+  --bg-code: #faf7ff;
+  --surface: #ffffff;
+  --border: #ebe6f2;
+  --border-strong: #ddd5ea;
+  --fg: #16121f;
+  --fg-muted: #605a70;
+  --fg-subtle: #8a8398;
+  --primary: #7420e0;
+  --primary-fg: #ffffff;
+  --ring: #8a38f5;
+  --selection: #e6d5ff;
+}
+
+.dark {
+  --bg: #08080c;
+  --bg-subtle: #0b0b12;
+  --bg-elevated: #101019;
+  --bg-code: #0d0d16;
+  --surface: #14141f;
+  --border: #20202f;
+  --border-strong: #2c2c40;
+  --fg: #ededf2;
+  --fg-muted: #a0a0b0;
+  --fg-subtle: #6c6c80;
+  --primary: #9a55f8;
+  --primary-fg: #0b0b12;
+  --ring: #8a38f5;
+  --selection: #2d0a5c;
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 6rem;
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    background-color: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-sans);
+    font-feature-settings: "cv11", "ss01";
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  ::selection {
+    background-color: var(--selection);
+  }
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+    border-radius: 3px;
+  }
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+  }
+
+  /* Scrollbar discreta y de marca */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background-color: var(--border-strong);
+    border-radius: 999px;
+    border: 3px solid var(--bg);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: var(--fg-subtle);
+  }
+}
+
+@layer utilities {
+  .bg-app { background-color: var(--bg); }
+  .bg-subtle { background-color: var(--bg-subtle); }
+  .bg-elevated { background-color: var(--bg-elevated); }
+  .bg-surface { background-color: var(--surface); }
+  .text-fg { color: var(--fg); }
+  .text-muted { color: var(--fg-muted); }
+  .text-subtle { color: var(--fg-subtle); }
+  .border-app { border-color: var(--border); }
+  .border-strong { border-color: var(--border-strong); }
+
+  /* Eyebrow mono: la voz "de datos" del portal */
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--fg-subtle);
+  }
+
+  .text-gradient {
+    background: linear-gradient(100deg, var(--fg) 0%, var(--fg) 40%, #9a55f8 75%, #ffab00 110%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* Malla/grid de fondo tipo blueprint logístico */
+  .bg-grid {
+    background-image:
+      linear-gradient(to right, color-mix(in oklab, var(--border) 60%, transparent) 1px, transparent 1px),
+      linear-gradient(to bottom, color-mix(in oklab, var(--border) 60%, transparent) 1px, transparent 1px);
+    background-size: 56px 56px;
+  }
+  .mask-fade-b {
+    -webkit-mask-image: linear-gradient(to bottom, black, transparent);
+    mask-image: linear-gradient(to bottom, black, transparent);
+  }
+  .mask-fade-x {
+    -webkit-mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+    mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+  }
+
+  .glow-violet {
+    box-shadow: var(--shadow-glow);
+  }
+}
+
+/* Ancho del artículo de docs: texto cómodo por defecto, full-bleed si la página
+   incluye un marcador [data-wide] (API Reference, Sandbox, Integraciones…). */
+#doc-article {
+  max-width: 48rem;
+}
+#doc-article:has([data-wide]) {
+  max-width: none;
+}
+
+/* Respeta prefers-reduced-motion en toda la app */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Shiki: colores duales vía variables CSS que conmutan con .dark */
+.shiki,
+.shiki span {
+  color: var(--shiki-light);
+  background-color: transparent;
+}
+.dark .shiki,
+.dark .shiki span {
+  color: var(--shiki-dark);
+}
+.shiki {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  line-height: 1.65;
+  tab-size: 2;
+}
+.shiki code {
+  display: grid;
+  counter-reset: line;
+}
+.shiki .line {
+  min-height: 1.2em;
+}
+.code-numbers .shiki .line::before {
+  counter-increment: line;
+  content: counter(line);
+  display: inline-block;
+  width: 1.6rem;
+  margin-right: 1.25rem;
+  text-align: right;
+  color: var(--fg-subtle);
+  opacity: 0.55;
+}
+
+/* Animación del token que recorre el riel del ciclo de vida (firma) */
+@keyframes rail-travel {
+  0% { offset-distance: 0%; opacity: 0; }
+  6% { opacity: 1; }
+  94% { opacity: 1; }
+  100% { offset-distance: 100%; opacity: 0; }
+}
+@keyframes node-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 171, 0, 0); }
+  50% { box-shadow: 0 0 0 6px rgba(255, 171, 0, 0.18); }
+}
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}

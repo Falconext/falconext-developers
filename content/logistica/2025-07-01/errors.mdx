@@ -1,0 +1,56 @@
+---
+title: Errores
+description: Formato de errores y códigos de estado de la API de Falconext.
+group: Introducción
+order: 4
+---
+
+Falconext usa códigos de estado HTTP convencionales y devuelve un cuerpo de error
+consistente para que puedas manejarlo de forma programática.
+
+## Formato del error
+
+```json
+{
+  "error": {
+    "type": "invalid_request_error",
+    "code": "parameter_missing",
+    "message": "El campo delivery_address es obligatorio.",
+    "param": "delivery_address"
+  }
+}
+```
+
+| Campo | Descripción |
+| --- | --- |
+| `type` | Categoría del error (ver abajo). |
+| `code` | Código estable y legible por máquina. |
+| `message` | Mensaje descriptivo para humanos. |
+| `param` | Campo que causó el error, si aplica. |
+
+## Códigos de estado
+
+| Código | Significado | Cuándo ocurre |
+| --- | --- | --- |
+| `200` / `201` | OK | La solicitud tuvo éxito. |
+| `400` | Bad Request | La solicitud está mal formada. |
+| `401` | Unauthorized | API key ausente o inválida. |
+| `403` | Forbidden | La key no tiene permiso para esta acción. |
+| `404` | Not Found | El recurso no existe. |
+| `409` | Conflict | Conflicto de estado (p. ej. cancelar un pedido ya entregado). |
+| `422` | Unprocessable Entity | Validación fallida. |
+| `429` | Too Many Requests | Superaste el [rate limit](/logistica/2025-07-01/rate-limits). |
+| `500` | Server Error | Error interno. Reintenta con backoff. |
+
+## Tipos de error
+
+| `type` | Descripción |
+| --- | --- |
+| `authentication_error` | Problema con la API key. |
+| `invalid_request_error` | Parámetros inválidos o faltantes. |
+| `rate_limit_error` | Demasiadas solicitudes. |
+| `api_error` | Error del lado de Falconext. |
+
+<Callout type="warning" title="Maneja el campo code, no el message">
+Los mensajes pueden cambiar. Programa tu lógica contra `type` y `code`, que son estables.
+</Callout>

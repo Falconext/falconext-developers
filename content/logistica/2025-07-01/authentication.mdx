@@ -1,0 +1,62 @@
+---
+title: Autenticación
+description: Autentica tus solicitudes a la API de Falconext con API keys por entorno.
+group: Introducción
+order: 2
+---
+
+La API de Falconext usa **API keys** para autenticar solicitudes. Cada key pertenece a un
+entorno y lleva un prefijo que indica su tipo.
+
+## Formato de la key
+
+| Prefijo | Entorno | Uso |
+| --- | --- | --- |
+| `fx_test_…` | Sandbox | Pruebas, sin efectos reales |
+| `fx_live_…` | Producción | Entregas reales |
+
+<Callout type="danger" title="Trata tus keys como contraseñas">
+Nunca expongas una `fx_live_` en el frontend, apps móviles o repositorios. Úsala solo en
+tu servidor. Si se filtra, revócala de inmediato desde la consola.
+</Callout>
+
+## Autoriza tus solicitudes
+
+Envía la key en la cabecera `Authorization` como Bearer token:
+
+```bash
+curl https://api.falconext.com/v1/orders \
+  -H "Authorization: Bearer $FALCONEXT_API_KEY"
+```
+
+Una key ausente o inválida devuelve `401 Unauthorized`:
+
+```json
+{
+  "error": {
+    "type": "authentication_error",
+    "code": "invalid_api_key",
+    "message": "La API key proporcionada no es válida."
+  }
+}
+```
+
+## Entornos
+
+<Steps>
+  <Step title="Empieza en Sandbox">
+    Usa una key `fx_test_` contra `https://sandbox.api.falconext.com/v1`. Los pedidos son
+    simulados y no generan costos ni movimientos reales.
+  </Step>
+  <Step title="Pasa a Producción">
+    Cambia a una key `fx_live_` y al host `https://api.falconext.com/v1`. El resto de tu
+    código no cambia.
+  </Step>
+</Steps>
+
+## Rotación de keys
+
+Puedes tener varias keys activas para rotarlas sin downtime: crea una nueva, despliégala,
+y revoca la anterior cuando dejes de usarla.
+
+<LinkCard href="/logistica/2025-07-01/guides/generar-api-keys" title="Generar API Keys" description="Paso a paso para crear y administrar tus claves." />

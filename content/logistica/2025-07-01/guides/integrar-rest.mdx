@@ -1,0 +1,46 @@
+---
+title: Integrar por REST
+description: Integra cualquier sistema con Falconext usando la API REST.
+group: Guías
+order: 31
+---
+
+Si tu sistema puede hacer peticiones HTTP, puede integrarse con Falconext. Esta es la ruta
+universal, sin depender de un SDK.
+
+## El patrón mínimo
+
+<Steps>
+  <Step title="Autentícate">
+    Envía tu API key como Bearer token en cada request. Ver [Autenticación](/logistica/2025-07-01/authentication).
+  </Step>
+  <Step title="Crea el pedido cuando se genere la orden">
+    En tu sistema, dispara una llamada a <code>POST /orders</code> al confirmar una orden.
+
+    ```bash
+    curl https://api.falconext.com/v1/orders \
+      -H "Authorization: Bearer $FALCONEXT_API_KEY" \
+      -H "Content-Type: application/json" \
+      -d '{ "external_order_id": "ORD-10482",
+            "customer": { "name": "María Fernández", "phone": "+51987654321" },
+            "delivery_address": { "address": "Calle Los Pinos 120, Miraflores", "city": "Lima" } }'
+    ```
+  </Step>
+  <Step title="Guarda el id y el tracking_code">
+    Asócialos a tu orden para poder consultarlos después y mostrar el rastreo a tu cliente.
+  </Step>
+  <Step title="Escucha los webhooks">
+    Suscríbete a los eventos para actualizar el estado de la orden sin hacer polling.
+    Ver [Integrar con Webhooks](/logistica/2025-07-01/guides/integrar-webhooks).
+  </Step>
+</Steps>
+
+<Callout type="tip" title="Idempotencia">
+Si reintentas una creación por un timeout, envía el mismo <code>external_order_id</code> para
+evitar pedidos duplicados. Falconext lo usa como identificador externo de tu orden.
+</Callout>
+
+## Manejo de errores
+
+Programa contra `type` y `code` del [error](/logistica/2025-07-01/errors), y aplica
+reintentos con backoff ante `429` y `5xx`.

@@ -1,0 +1,52 @@
+---
+title: Integrar con Webhooks
+description: Configura un endpoint para recibir eventos de Falconext.
+group: Guías
+order: 32
+---
+
+Los webhooks te avisan cuando algo cambia, sin que tengas que preguntar. Esta guía crea un
+endpoint receptor y lo registra en Falconext.
+
+<Steps>
+  <Step title="Expón un endpoint HTTPS">
+    Crea una ruta pública que reciba `POST` con cuerpo JSON. En desarrollo puedes usar un
+    túnel (ngrok, Cloudflare Tunnel) para exponer tu localhost.
+  </Step>
+  <Step title="Regístralo en Falconext">
+    Indica la URL y los eventos que te interesan.
+
+    ```bash
+    curl https://api.falconext.com/v1/webhook_endpoints \
+      -H "Authorization: Bearer $FALCONEXT_API_KEY" \
+      -H "Content-Type: application/json" \
+      -d '{ "url": "https://tu-app.com/webhooks/falconext",
+            "events": ["order.delivered", "order.failed"] }'
+    ```
+
+    Guarda el <code>secret</code> que devuelve: lo usarás para verificar la firma.
+  </Step>
+  <Step title="Verifica la firma y responde 2xx">
+    Valida la cabecera `Falconext-Signature` antes de procesar. Responde en menos de 5 s.
+
+    ```javascript
+    app.post("/webhooks/falconext",
+      express.raw({ type: "application/json" }),
+      (req, res) => {
+        const sig = req.header("Falconext-Signature");
+        if (!verifySignature(req.body, sig, process.env.WEBHOOK_SECRET)) {
+          return res.status(400).send("firma inválida");
+        }
+        // encola el evento y responde rápido
+        res.sendStatus(200);
+      });
+    ```
+  </Step>
+</Steps>
+
+<Callout type="warning" title="Responde rápido, procesa después">
+No hagas trabajo pesado dentro del handler. Encola el evento y responde 2xx de inmediato,
+o arriesgas timeouts y reintentos.
+</Callout>
+
+<LinkCard href="/logistica/2025-07-01/guides/consumir-eventos" title="Consumir eventos" description="Cómo reaccionar a cada tipo de evento." />

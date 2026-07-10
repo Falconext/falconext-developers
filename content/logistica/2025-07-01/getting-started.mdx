@@ -1,0 +1,70 @@
+---
+title: Primeros pasos
+description: Crea tu primer pedido de entrega con la API de Falconext Logística en minutos.
+group: Introducción
+order: 1
+---
+
+Bienvenido a **Falconext Logística**. En esta guía crearás tu primer pedido por API y
+recibirás su primer evento de webhook. Toma unos cinco minutos.
+
+<Callout type="note" title="Lo que necesitas">
+Una cuenta de Falconext y una API key de pruebas. Si aún no la tienes, revisa
+[cómo generar API keys](/logistica/2025-07-01/guides/generar-api-keys).
+</Callout>
+
+## Instala un SDK (opcional)
+
+Puedes usar la API con cualquier cliente HTTP, pero los SDKs oficiales te ahorran trabajo.
+
+<SdkInstallTabs />
+
+## Crea tu primer pedido
+
+<Steps>
+  <Step title="Autentícate con tu API key">
+    Todas las solicitudes usan tu API key como Bearer token. Guárdala en una variable de
+    entorno; nunca la incrustes en el código cliente.
+
+    ```bash
+    export FALCONEXT_API_KEY="fx_test_••••••••"
+    ```
+  </Step>
+  <Step title="Envía la solicitud de creación">
+    Indica el cliente y la dirección de entrega. Falconext devuelve un `id` y un `tracking_code`.
+
+    <CreateOrderExample />
+  </Step>
+  <Step title="Recibe eventos del pedido">
+    Registra un endpoint de [webhook](/logistica/2025-07-01/webhooks) y escucha el ciclo de
+    vida completo: `order.created`, `order.assigned`, `order.picked_up`, `order.in_transit`
+    y `order.delivered`.
+  </Step>
+</Steps>
+
+## La respuesta
+
+Una creación exitosa devuelve `201 Created` con el recurso del pedido:
+
+```json
+{
+  "id": "ord_3xK8p2Qm",
+  "object": "order",
+  "external_order_id": "ORD-10482",
+  "tracking_code": "FX-7Q2M8K",
+  "status": "pending",
+  "created_at": "2025-07-01T14:03:11Z"
+}
+```
+
+<Callout type="tip" title="Pruébalo sin escribir código">
+Abre el [Sandbox](/docs/sandbox), pega tu API key y envía este mismo request desde el navegador.
+</Callout>
+
+## Siguientes pasos
+
+<LinkCard href="/logistica/2025-07-01/authentication" title="Autenticación" description="Cómo funcionan las API keys y los entornos." />
+
+<LinkCard href="/logistica/2025-07-01/reference" title="API Reference" description="Todos los endpoints, generados desde OpenAPI." />
+
+<LinkCard href="/logistica/2025-07-01/webhooks" title="Webhooks" description="Recibe cada cambio de estado en tiempo real." />

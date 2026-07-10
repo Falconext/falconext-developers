@@ -1,0 +1,43 @@
+---
+title: Integrar con Odoo
+description: Conecta ventas e inventario de Odoo con Falconext.
+group: Guías
+order: 35
+---
+
+Crea pedidos en Falconext directamente desde los pedidos de venta de Odoo.
+
+<Steps>
+  <Step title="Crea un módulo o automatización">
+    Usa una <em>Automated Action</em> sobre <code>sale.order</code> (o un módulo propio) que se
+    dispare al confirmar el pedido.
+  </Step>
+  <Step title="Llama a la API con requests">
+    Desde el método Python del servidor de Odoo:
+
+    ```python
+    import requests
+
+    def _create_falconext_order(self):
+        for order in self:
+            requests.post(
+                "https://api.falconext.com/v1/orders",
+                headers={"Authorization": f"Bearer {API_KEY}"},
+                json={
+                    "external_order_id": order.name,
+                    "customer": {"name": order.partner_id.name, "phone": order.partner_id.phone},
+                    "delivery_address": {"address": order.partner_shipping_id.contact_address},
+                },
+                timeout=10,
+            )
+    ```
+  </Step>
+  <Step title="Sincroniza el estado con webhooks">
+    Expón un controlador HTTP en Odoo que reciba los [webhooks](/logistica/2025-07-01/webhooks)
+    y actualice el estado de la entrega en el pedido.
+  </Step>
+</Steps>
+
+<Callout type="tip" title="Guarda credenciales de forma segura">
+Usa <code>ir.config_parameter</code> para la API key en lugar de escribirla en el código.
+</Callout>

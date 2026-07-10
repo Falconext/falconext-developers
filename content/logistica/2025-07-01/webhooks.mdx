@@ -1,0 +1,52 @@
+---
+title: Webhooks
+description: Recibe eventos del ciclo de vida de cada pedido en tiempo real, con firma HMAC y reintentos.
+group: API
+order: 10
+---
+
+Cada pedido emite eventos a medida que avanza por su ciclo de vida. Registra un endpoint
+HTTPS y Falconext te notificará al instante en cada cambio de estado.
+
+## Cómo funciona
+
+Registra un endpoint con `POST /webhook_endpoints`, suscríbete a los eventos que te
+interesen y responde con `2xx` en menos de 5 segundos. Si tu servidor falla, reintentamos
+con backoff exponencial hasta 24 horas.
+
+## Verifica la firma
+
+Cada request incluye la cabecera `Falconext-Signature`. Calcula el HMAC del cuerpo con el
+`secret` de tu endpoint y compáralo en tiempo constante.
+
+```http
+POST /webhooks/falconext HTTP/1.1
+Content-Type: application/json
+Falconext-Event: order.delivered
+Falconext-Order-Id: ord_3xK8p2Qm
+Falconext-Signature: t=1719849600,v1=8b7c…e2
+Falconext-Attempt: 1
+```
+
+```javascript
+import crypto from "node:crypto";
+
+export function verifySignature(payload, signature, secret) {
+  const expected = crypto
+    .createHmac("sha256", secret)
+    .update(payload, "utf8")
+    .digest("hex");
+  return crypto.timingSafeEqual(
+    Buffer.from(expected),
+    Buffer.from(signature),
+  );
+}
+```
+
+<Callout type="warning" title="Valida siempre la firma">
+No proceses un evento sin verificar su firma. Descarta cualquier request cuya firma no coincida.
+</Callout>
+
+## Catálogo de eventos
+
+<WebhookCatalog />

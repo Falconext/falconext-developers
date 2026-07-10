@@ -1,0 +1,37 @@
+---
+title: Versiones
+description: Estrategia de versionado de la API de Falconext.
+group: Introducción
+order: 5
+---
+
+La API de Falconext se versiona por **fecha**. La versión actual es `2025-07-01`.
+
+## Cómo se fija la versión
+
+Tu cuenta usa una versión por defecto, fijada la primera vez que integraste. Para
+sobrescribirla en una solicitud puntual, envía la cabecera `Falconext-Version`:
+
+```http
+Falconext-Version: 2025-07-01
+```
+
+## Qué es un cambio compatible
+
+Los siguientes cambios **no** rompen tu integración y pueden ocurrir sin nueva versión:
+
+- Nuevos endpoints o recursos.
+- Nuevos campos opcionales en respuestas.
+- Nuevos valores de enum (maneja los desconocidos con tolerancia).
+- Nuevos tipos de evento de webhook.
+
+<Callout type="warning" title="Cambios incompatibles">
+Renombrar o eliminar campos, o cambiar el tipo de un campo existente, siempre implica una
+nueva versión con fecha. Los anunciamos en el [changelog](/logistica/2025-07-01/changelog) con antelación.
+</Callout>
+
+## Recomendaciones
+
+- Fija una versión explícita en producción.
+- Ignora campos que no reconozcas en lugar de fallar.
+- Revisa el [changelog](/logistica/2025-07-01/changelog) antes de subir de versión.

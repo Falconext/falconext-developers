@@ -1,0 +1,46 @@
+---
+title: Consumir eventos
+description: Procesa y reacciona a los eventos del ciclo de vida de un pedido.
+group: Guías
+order: 33
+---
+
+Una vez que recibes webhooks, el siguiente paso es reaccionar a cada evento. Aquí verás el
+patrón recomendado.
+
+## Enruta por tipo de evento
+
+```javascript
+function handleEvent(event) {
+  switch (event.event) {
+    case "order.assigned":
+      return notifyCustomer(event.data, "Tu pedido tiene repartidor");
+    case "order.in_transit":
+      return updateOrder(event.data, "en_camino");
+    case "order.delivered":
+      return markOrderDelivered(event.data);
+    case "order.failed":
+      return openIncident(event.data);
+    default:
+      return; // ignora eventos que aún no manejas
+  }
+}
+```
+
+## Sé idempotente
+
+Un mismo evento puede llegar más de una vez (por reintentos). Usa el `id` del pedido y el
+tipo de evento como llave para no procesar dos veces.
+
+<Callout type="tip" title="Guarda un registro de eventos procesados">
+Antes de actuar, verifica si ya viste ese <code>(order_id, event)</code>. Si sí, responde
+2xx sin hacer nada.
+</Callout>
+
+## Ordena por el ciclo de vida
+
+El orden natural es `created → assigned → picked_up → in_transit → delivered`. No asumas que
+los eventos llegan estrictamente en orden: apóyate en el campo `status` del payload como
+fuente de verdad.
+
+<LinkCard href="/logistica/2025-07-01/webhooks" title="Catálogo de eventos" description="Todos los eventos y sus payloads de ejemplo." />

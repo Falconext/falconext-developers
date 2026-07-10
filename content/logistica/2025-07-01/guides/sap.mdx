@@ -1,0 +1,42 @@
+---
+title: Integrar con SAP
+description: Sincroniza pedidos de SAP ERP / S4HANA con Falconext Logística.
+group: Guías
+order: 34
+---
+
+Conecta tus órdenes de venta de SAP con Falconext para automatizar el last-mile.
+
+<Callout type="note" title="Enfoques disponibles">
+Puedes integrar vía middleware (SAP PI/PO, CPI), con un job por lotes, o en tiempo real
+mediante un evento de salida. Todos terminan llamando a la misma API REST.
+</Callout>
+
+<Steps>
+  <Step title="Mapea la orden de venta a un pedido">
+    Toma el número de documento como <code>external_order_id</code>, y los datos de <em>ship-to</em>
+    como <code>customer</code> y <code>delivery_address</code>.
+  </Step>
+  <Step title="Dispara la creación al liberar el pedido">
+    En el evento de salida (o en tu iFlow de CPI), llama a <code>POST /orders</code> con la
+    API key en el header de autorización.
+
+    ```json
+    {
+      "external_order_id": "SO-000482",
+      "customer": { "name": "{{customer_name}}", "phone": "{{customer_phone}}" },
+      "delivery_address": { "address": "{{ship_to_address}}", "city": "{{ship_to_city}}" },
+      "metadata": { "sap_doc": "000482", "plant": "1000" }
+    }
+    ```
+  </Step>
+  <Step title="Actualiza SAP con los eventos">
+    Recibe los [webhooks](/logistica/2025-07-01/webhooks) y actualiza el estado de entrega
+    del documento en SAP (por ejemplo vía un servicio OData de vuelta).
+  </Step>
+</Steps>
+
+## Recomendaciones
+
+- Usa <code>metadata</code> para conservar las llaves de SAP y facilitar la conciliación.
+- Maneja reintentos idempotentes con el <code>external_order_id</code>.

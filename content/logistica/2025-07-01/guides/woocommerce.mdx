@@ -1,0 +1,55 @@
+---
+title: Integrar con WooCommerce
+description: Dispara pedidos de Falconext desde WooCommerce.
+group: Guías
+order: 37
+---
+
+Crea un pedido en Falconext cuando una orden de WooCommerce pasa a "procesando".
+
+<Steps>
+  <Step title="Engánchate al cambio de estado de la orden">
+    Usa el hook <code>woocommerce_order_status_processing</code> en tu plugin o en el
+    <code>functions.php</code> del tema hijo.
+
+    ```php
+    add_action('woocommerce_order_status_processing', 'fx_create_order');
+
+    function fx_create_order($order_id) {
+      $order = wc_get_order($order_id);
+
+      wp_remote_post('https://api.falconext.com/v1/orders', [
+        'headers' => [
+          'Authorization' => 'Bearer ' . FALCONEXT_API_KEY,
+          'Content-Type'  => 'application/json',
+        ],
+        'body' => wp_json_encode([
+          'external_order_id' => $order->get_order_number(),
+          'customer' => [
+            'name'  => $order->get_formatted_shipping_full_name(),
+            'phone' => $order->get_billing_phone(),
+          ],
+          'delivery_address' => [
+            'address' => $order->get_shipping_address_1() . ', ' . $order->get_shipping_city(),
+            'city'    => $order->get_shipping_city(),
+          ],
+        ]),
+        'timeout' => 10,
+      ]);
+    }
+    ```
+  </Step>
+  <Step title="Guarda el tracking en la orden">
+    Almacena el <code>tracking_code</code> devuelto como <em>order meta</em> para mostrarlo al
+    cliente.
+  </Step>
+  <Step title="Actualiza con webhooks">
+    Registra un endpoint (por ejemplo una ruta de la REST API de WordPress) para recibir los
+    [eventos](/logistica/2025-07-01/webhooks) y actualizar el estado de la orden.
+  </Step>
+</Steps>
+
+<Callout type="tip" title="Evita bloquear el checkout">
+<code>wp_remote_post</code> con un <code>timeout</code> corto evita que una lentitud de red
+afecte la experiencia de compra. Considera encolarlo con Action Scheduler.
+</Callout>

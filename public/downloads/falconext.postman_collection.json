@@ -1,0 +1,79 @@
+{
+  "info": {
+    "name": "Falconext Logística API",
+    "description": "Colección de plantilla alineada al dominio real (Order / PedidoLogistica). Configura las variables {{baseUrl}} y {{apiKey}} en el entorno.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{apiKey}}", "type": "string" }]
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "https://sandbox.api.falconext.com/v1" },
+    { "key": "apiKey", "value": "fx_test_replace_me" }
+  ],
+  "item": [
+    {
+      "name": "Pedidos",
+      "item": [
+        {
+          "name": "Crear un pedido",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/orders", "host": ["{{baseUrl}}"], "path": ["orders"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"external_order_id\": \"ORD-10482\",\n  \"customer\": { \"name\": \"María Fernández\", \"phone\": \"+51987654321\" },\n  \"delivery_address\": { \"address\": \"Calle Los Pinos 120, Miraflores\", \"city\": \"Lima\" },\n  \"items\": [{ \"description\": \"Polo talla M\", \"quantity\": 2 }],\n  \"cash_on_delivery\": 120.00\n}"
+            }
+          }
+        },
+        {
+          "name": "Listar pedidos",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/orders?limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["orders"],
+              "query": [{ "key": "limit", "value": "20" }]
+            }
+          }
+        },
+        {
+          "name": "Obtener un pedido",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/orders/:id", "host": ["{{baseUrl}}"], "path": ["orders", ":id"] }
+          }
+        },
+        {
+          "name": "Cancelar un pedido",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/orders/:id/cancel", "host": ["{{baseUrl}}"], "path": ["orders", ":id", "cancel"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Rastreo",
+      "item": [
+        {
+          "name": "Rastrear un pedido",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/orders/:id/tracking", "host": ["{{baseUrl}}"], "path": ["orders", ":id", "tracking"] }
+          }
+        },
+        {
+          "name": "Prueba de entrega",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/orders/:id/proof", "host": ["{{baseUrl}}"], "path": ["orders", ":id", "proof"] }
+          }
+        }
+      ]
+    }
+  ]
+}

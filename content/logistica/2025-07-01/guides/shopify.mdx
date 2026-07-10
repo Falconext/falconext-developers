@@ -1,0 +1,51 @@
+---
+title: Integrar con Shopify
+description: Crea pedidos en Falconext desde tus órdenes de Shopify.
+group: Guías
+order: 36
+---
+
+Automatiza el despacho creando un pedido en Falconext cada vez que se paga una orden en
+Shopify.
+
+<Steps>
+  <Step title="Suscríbete al webhook orders/paid de Shopify">
+    En tu app de Shopify, registra el webhook <code>orders/paid</code> apuntando a tu backend.
+  </Step>
+  <Step title="Transforma la orden y crea el pedido">
+    Al recibir la orden de Shopify, mapéala y llama a Falconext.
+
+    ```javascript
+    // handler del webhook orders/paid de Shopify
+    export async function onOrderPaid(order) {
+      await fetch("https://api.falconext.com/v1/orders", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${process.env.FALCONEXT_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          external_order_id: order.name, // p.ej. "#1042"
+          customer: {
+            name: order.shipping_address.name,
+            phone: order.shipping_address.phone,
+          },
+          delivery_address: {
+            address: `${order.shipping_address.address1}, ${order.shipping_address.city}`,
+            city: order.shipping_address.city,
+          },
+        }),
+      });
+    }
+    ```
+  </Step>
+  <Step title="Devuelve el rastreo a Shopify">
+    Con los [webhooks](/logistica/2025-07-01/webhooks) de Falconext, añade el
+    <code>tracking_code</code> al fulfillment de Shopify y notifica al cliente.
+  </Step>
+</Steps>
+
+<Callout type="warning" title="Verifica el HMAC de Shopify también">
+Valida la firma de los webhooks de Shopify (cabecera <code>X-Shopify-Hmac-Sha256</code>)
+además de la firma de Falconext.
+</Callout>
