@@ -32,7 +32,7 @@ export async function SdkPreview() {
             </Link>
           </div>
         </Reveal>
-        <Reveal x={16} delay={0.1}>
+        <Reveal x={16} delay={0.1} className="min-w-0">
           <div className="min-w-0">
             <CodeGroup snippets={snippets} title="orders.create" />
           </div>

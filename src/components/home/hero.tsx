@@ -93,10 +93,10 @@ export async function Hero() {
           </StaggerGroup>
 
           {/* Columna derecha: código → eventos */}
-          <Reveal mode="load" x={28} delay={0.25} duration={0.7}>
-            <div className="relative">
-              <div className="glow-violet rounded-2xl border border-strong bg-elevated p-1.5">
-                <div className="rounded-xl bg-app">
+          <Reveal mode="load" x={28} delay={0.25} duration={0.7} className="min-w-0">
+            <div className="relative min-w-0">
+              <div className="glow-violet min-w-0 rounded-2xl border border-strong bg-elevated p-1.5">
+                <div className="min-w-0 rounded-xl bg-app">
                   <div className="flex items-center gap-2 border-b border-app px-4 py-2.5">
                     <span className="h-2.5 w-2.5 rounded-full bg-rose-400/70" />
                     <span className="h-2.5 w-2.5 rounded-full bg-amber-signal/70" />
