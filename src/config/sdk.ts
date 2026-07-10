@@ -60,7 +60,7 @@ const order: Order = await fx.orders.create({
     lang: "php",
     installLang: "bash",
     install: "composer require falconext/sdk",
-    status: "available",
+    status: "planned",
     createSnippet: `<?php
 use Falconext\\Falconext;
 
@@ -82,7 +82,7 @@ echo $order->tracking_code;`,
     lang: "php",
     installLang: "bash",
     install: "composer require falconext/laravel",
-    status: "beta",
+    status: "planned",
     createSnippet: `<?php
 use Falconext\\Laravel\\Facades\\Falconext;
 
@@ -99,11 +99,12 @@ $order = Falconext::orders()->create([
     label: "Python",
     lang: "python",
     installLang: "bash",
-    install: "pip install falconext",
+    install: "pip install falconext-logistica",
     status: "available",
-    createSnippet: `from falconext import Falconext
+    createSnippet: `import os
+from falconext_logistica import FalconextLogistica
 
-fx = Falconext(api_key=os.environ["FALCONEXT_API_KEY"])
+fx = FalconextLogistica(api_key=os.environ["FALCONEXT_API_KEY"])
 
 order = fx.orders.create(
     external_order_id="ORD-10482",
@@ -121,7 +122,7 @@ print(order.tracking_code)`,
     lang: "java",
     installLang: "bash",
     install: "implementation 'com.falconext:sdk:1.0.0'",
-    status: "beta",
+    status: "planned",
     createSnippet: `Falconext fx = new Falconext(System.getenv("FALCONEXT_API_KEY"));
 
 Order order = fx.orders().create(
@@ -139,7 +140,7 @@ Order order = fx.orders().create(
     lang: "csharp",
     installLang: "bash",
     install: "dotnet add package Falconext",
-    status: "beta",
+    status: "planned",
     createSnippet: `var fx = new FalconextClient(Environment.GetEnvironmentVariable("FALCONEXT_API_KEY"));
 
 var order = await fx.Orders.CreateAsync(new OrderParams
