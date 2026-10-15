@@ -261,7 +261,36 @@ está **validado contra el contrato del portal, sin drift breaking**. Detalle:
 - **Pulido** (pendiente): a11y (focus-trap del command palette, aria del accordion),
   sitemap + OG por página, métricas de perf.
 
-### Fase 5 — Prueba de escala
+### Fase 5 — Prueba de escala ✅ SUPERADA con Facturación Electrónica (2026-10-15)
+El segundo producto entró **solo con registry + spec + MDX**, sin tocar un componente:
+- `src/config/products.ts`: `facturacion` pasa de `planned` a `beta` con la versión `2026-11-01`.
+- `public/openapi/facturacion/2026-11-01.json`: contrato v1 hand-authored, OpenAPI 3.1, 13
+  operaciones / 28 esquemas, fachada inglés sobre `CrearComprobanteDto` + `EstadoSunat`.
+  Emisión asíncrona (202 + webhooks), `Idempotency-Key` obligatoria en todos los POST,
+  `402 credit_limit_reached` para el tope de crédito. `spectral lint` sin errores.
+- `content/facturacion/2026-11-01/`: 8 páginas + 5 guías. Incluye **`pricing.mdx`** (tarifario
+  por tramos, S/ 0.05 → 0.03). Los eventos `invoice.*` van en tabla MDX, no en
+  `WebhookCatalog`: ese componente y `config/webhooks.ts` siguen acoplados a `order.*`
+  (pendiente: hacerlos por producto; ver abajo).
+- Único cambio en `src/lib`: `openapi/samples.ts` ahora emite las cabeceras **obligatorias**
+  declaradas en el contrato (`in: header`, `required`) en cURL/Node/Python. Sin esto, el
+  snippet de `POST /invoices` omitía `Idempotency-Key` y un integrador que lo copiaba recibía
+  422 en su primera llamada. Es spec-driven y beneficia a todos los productos.
+- Aprendizaje: la referencia **no** interpreta markdown en `description` (los backticks salen
+  literales). Los specs no deben usar `\`código\`` en descripciones.
+- Verificado: typecheck + build EXIT 0, 53 páginas indexadas (antes 25), screenshots de landing,
+  pricing, getting-started y `reference/createinvoice`.
+- Gotcha repetido: un `next start` viejo seguía en el :3000 y el screenshot era de la build
+  anterior. `lsof -ti:3000 | xargs kill -9` antes de volver a levantar.
+- El plan completo del producto (fases, precios, riesgos) vive en el doc "Krezka API de
+  Facturación — Plan de implementación" (Claude Docs). El backend se implementa contra este
+  contrato en sus fases 2–3 y se valida con drift-check como Logística.
+
+**Pendiente derivado:** `config/webhooks.ts` + `WebhookCatalog` + `delivery-rail` + el índice de
+búsqueda asumen un solo catálogo de eventos (`order.*`). Hacerlos por producto es el primer
+cambio real a componentes que pide el multi-producto.
+
+### Fase 5 (plan original)
 - Onboardear el **2º producto** (p. ej. ERP o Facturación) SOLO agregando su entrada en el
   registry + su spec + guías MDX. Si requiere tocar componentes, la arquitectura falló:
   arréglala, no la parchees. Es el test de que "no hay que rehacer".
@@ -296,8 +325,8 @@ search full-text y sandbox spec-driven). Lo que queda, en orden de valor:
    Activarlo + emisión/rotación de keys. Pre-requisito para el sandbox "en vivo".
 3. **Host sandbox con CORS + test keys** (infra): habilita la ejecución en vivo del playground
    (hoy degrada a snippets por CORS). Decisión de infra del usuario.
-4. **Fase 5 — 2º producto**: onboardear ERP/Facturación SOLO agregando entrada en el registry
-   + spec + guías MDX (test de que la arquitectura no exige rehacer nada).
+4. ~~**Fase 5 — 2º producto**~~ ✅ hecho con Facturación (ver §6). Siguiente: catálogo de
+   webhooks por producto, y el backend de Facturación contra el contrato publicado.
 5. **SDK-gen** y **pulido** (a11y, sitemap/OG, perf) de §Fase 4.
 
 > Antes de escribir código: corre `pnpm typecheck && pnpm build` para confirmar que partes

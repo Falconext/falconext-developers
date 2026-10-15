@@ -1,0 +1,32 @@
+---
+title: Anular un comprobante
+description: Comunicación de baja dentro de los 7 días, y qué hacer después.
+group: Guías
+order: 33
+---
+
+Dentro de los **7 días calendario** desde la emisión, un comprobante aceptado se puede dar
+de baja. Pasado ese plazo, usa una [nota de crédito](/facturacion/2026-11-01/guides/nota-de-credito).
+
+```bash
+curl -X POST https://api.falconext.pe/api/v1/invoicing/invoices/inv_3xK8p2Qm/void \
+  -H "Authorization: Bearer $FALCONEXT_API_KEY" \
+  -H "Idempotency-Key: $(uuidgen)" \
+  -H "Content-Type: application/json" \
+  -d '{ "reason": "Error en los datos del cliente" }'
+```
+
+La respuesta es `202` con `status: voiding`. Cuando SUNAT acepte la baja recibes
+`invoice.voided` y el estado pasa a `voided`.
+
+## Errores frecuentes
+
+| `error.code` | Qué significa |
+| --- | --- |
+| `invoice_not_voidable` | El comprobante no está `accepted` ni `observed`. Uno `rejected` no se anula: ya no existe ante SUNAT. |
+| `void_window_expired` | Pasaron más de 7 días. Emite una nota de crédito. |
+
+<Callout type="warning" title="El correlativo no se reutiliza">
+Un comprobante dado de baja sigue ocupando su número. El siguiente se emite con el
+correlativo que sigue.
+</Callout>

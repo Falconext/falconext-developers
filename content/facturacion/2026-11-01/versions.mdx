@@ -1,0 +1,35 @@
+---
+title: Versiones
+description: Cómo se versiona la API de Facturación y qué cambios son compatibles.
+group: Introducción
+order: 6
+---
+
+La API se versiona por **fecha**. La versión actual es `2026-11-01` (beta).
+
+## Cómo se fija la versión
+
+Tu cuenta usa una versión por defecto, fijada la primera vez que integraste. Para
+sobrescribirla en una solicitud puntual, envía la cabecera `Falconext-Version`:
+
+```http
+Falconext-Version: 2026-11-01
+```
+
+## Qué es un cambio compatible
+
+Los siguientes cambios **no** rompen tu integración y pueden ocurrir sin nueva versión:
+
+- Nuevos endpoints o recursos (por ejemplo, guías de remisión).
+- Nuevos campos opcionales en respuestas.
+- Nuevos valores de enum (maneja los desconocidos con tolerancia). SUNAT agrega códigos
+  de rechazo con frecuencia: no los valides contra una lista cerrada.
+- Nuevos eventos de webhook (ignora los que no reconozcas).
+
+## Qué exige una versión nueva
+
+- Renombrar o quitar un campo.
+- Cambiar el tipo de un campo o el significado de un estado.
+- Hacer obligatorio un campo que era opcional.
+
+Cada versión se mantiene al menos 12 meses después de publicarse la siguiente.

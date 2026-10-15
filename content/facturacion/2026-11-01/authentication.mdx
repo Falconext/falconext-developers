@@ -1,0 +1,51 @@
+---
+title: Autenticación
+description: Autentica tus solicitudes a la API de Facturación con API keys por entorno.
+group: Introducción
+order: 2
+---
+
+La API usa **API keys** para autenticar solicitudes. Cada key pertenece a tu cuenta de
+integrador, a un entorno, y puede emitir por todos los emisores (RUC) de ese entorno.
+
+## Formato de la key
+
+| Prefijo | Entorno | Qué hace |
+| --- | --- | --- |
+| `fx_test_…` | Pruebas | Emite contra el ambiente de pruebas de SUNAT. Sin validez tributaria, sin costo. |
+| `fx_live_…` | Producción | Emite comprobantes reales. Cada uno consume tu plan. |
+
+## Cómo enviarla
+
+Como Bearer token en la cabecera `Authorization`:
+
+```http
+GET /api/v1/invoicing/issuers HTTP/1.1
+Host: api.falconext.pe
+Authorization: Bearer fx_live_a1b2c3…
+```
+
+También se acepta `x-api-key: fx_live_…`, pero prefiere `Authorization`.
+
+<Callout type="warning" title="Nunca expongas una key de producción">
+Úsala solo desde tu servidor. Si una key se filtra, revócala desde la consola: deja de
+funcionar al instante y puedes crear otra sin tocar tus emisores.
+</Callout>
+
+## Integrador y emisores
+
+Tu key identifica al **integrador** (quien paga). Cada solicitud de emisión nombra el
+**emisor** con `issuer_id`. Un integrador puede tener tantos emisores como RUC gestione;
+el consumo de todos se suma en una sola factura mensual.
+
+Una key solo ve sus propios emisores. Intentar emitir con un `issuer_id` ajeno devuelve
+`403 issuer_forbidden`.
+
+## Errores de autenticación
+
+| Código HTTP | `error.code` | Causa |
+| --- | --- | --- |
+| `401` | `missing_api_key` | No enviaste la cabecera. |
+| `401` | `invalid_api_key` | La key no existe o fue revocada. |
+| `403` | `issuer_forbidden` | El emisor no pertenece a tu integración. |
+| `403` | `environment_mismatch` | Key `fx_test_` con un emisor `live`, o al revés. |

@@ -1,0 +1,43 @@
+---
+title: El ciclo SUNAT
+description: Qué significa cada estado de un comprobante y qué hacer en cada uno.
+group: Guías
+order: 34
+---
+
+Emitir no es un paso: son tres. Tu solicitud, la firma y el envío, y la respuesta de SUNAT.
+El estado del comprobante te dice en cuál está.
+
+| Estado | Significa | Qué hacer |
+| --- | --- | --- |
+| `pending` | Falconext lo aceptó, asignó correlativo y lo puso en cola. | Nada. Guarda el `id` y el `full_number`. |
+| `sent` | El XML firmado salió hacia SUNAT. | Nada. Suele durar segundos. |
+| `accepted` | SUNAT lo aceptó. El CDR está disponible. | Es válido. Entrega el PDF al cliente. |
+| `observed` | SUNAT lo aceptó con observaciones. | Es válido. Lee el mensaje y corrige en adelante. |
+| `rejected` | SUNAT lo rechazó. | Corrige y emite uno **nuevo**. Este no se cobra. |
+| `voiding` | Comunicación de baja enviada. | Espera `invoice.voided`. |
+| `voided` | La baja fue aceptada. | Revierte la venta en tu sistema. |
+
+## Si SUNAT no responde
+
+Si SUNAT está caída, el comprobante se queda en `sent` y Falconext reintenta solo. No
+emitas de nuevo: usarías otro correlativo para la misma venta. Cuando SUNAT vuelva, llega
+el webhook con el resultado.
+
+## Si Falconext no responde
+
+Si tu `POST` no recibe respuesta (timeout, `5xx`), **reintenta con la misma
+`Idempotency-Key`**. Si el comprobante ya se había creado, recibes el mismo; si no, se crea
+ahora. Nunca se emiten dos.
+
+## El CDR
+
+El CDR es la constancia de SUNAT. Está disponible en `GET /invoices/{id}/cdr` desde
+`accepted`, `observed` o `rejected`. Guárdalo si tu auditoría lo exige; Falconext lo
+conserva de todos modos.
+
+<Callout type="note" title="Un CDR aceptado no es lo mismo que SUNAT teniéndolo">
+Muy rara vez, SUNAT acepta un comprobante y no lo refleja en su consulta pública. Falconext
+verifica periódicamente los comprobantes aceptados contra SUNAT; si detecta una diferencia,
+te lo avisa como `invoice.observed` con el detalle.
+</Callout>

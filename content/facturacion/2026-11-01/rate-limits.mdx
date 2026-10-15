@@ -1,0 +1,32 @@
+---
+title: Límites de tasa
+description: Cuántas solicitudes puedes hacer y cómo leer tu cuota.
+group: Introducción
+order: 5
+---
+
+La API aplica límites de tasa por API key para proteger el servicio y a SUNAT.
+
+| Recurso | Límite | Ventana |
+| --- | --- | --- |
+| Lectura (`GET`) | 600 req | por minuto |
+| Emisión (`POST /invoices`, `/credit_notes`, `/void`) | 120 req | por minuto |
+| Webhooks entrantes | sin límite | — |
+
+Para emitir en lote (cierres de caja, migraciones) no necesitas más cuota: 120 por minuto
+son 7,200 comprobantes por hora. Si tu caso excede eso, escríbenos.
+
+## Cabeceras de límite
+
+Cada respuesta incluye tu estado actual de cuota:
+
+```http
+RateLimit-Limit: 120
+RateLimit-Remaining: 118
+RateLimit-Reset: 43
+```
+
+## Cuando superas el límite
+
+Recibirás `429 Too Many Requests`. Respeta la cabecera `Retry-After` (en segundos) y
+reintenta con la **misma** `Idempotency-Key`: el reintento nunca emite dos veces.

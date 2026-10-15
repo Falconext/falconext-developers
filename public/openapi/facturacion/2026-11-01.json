@@ -1,0 +1,1566 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Falconext Facturación Electrónica API",
+    "version": "2026-11-01",
+    "x-status": "CONTRATO v1 (fase 1 del plan). Fachada en inglés sobre el motor real de comprobantes de falconext-mype (ComprobanteService + EnviarSunatService + QpseClient). El backend se implementa contra este contrato y se valida con drift-check, como Logística. No publicar como GA hasta que el backend lo cubra.",
+    "description": "Emite facturas, boletas y notas de crédito válidas ante SUNAT desde tu propio sistema. Falconext firma, envía, guarda el CDR y te avisa por webhook. Tú no tocas XML, certificados ni SUNAT.\n\n**Asíncrono por diseño:** emitir responde en milisegundos con el correlativo asignado; la aceptación de SUNAT llega después por webhook. **Idempotente:** cada POST lleva Idempotency-Key, así un reintento nunca emite dos veces.",
+    "contact": {
+      "name": "Soporte Falconext",
+      "email": "developers@falconext.pe"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.falconext.pe/api/v1/invoicing",
+      "description": "Producción. Las keys fx_test_ emiten contra el ambiente de pruebas de SUNAT en este mismo host."
+    }
+  ],
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "Comprobantes",
+      "description": "Facturas y boletas: emisión, estado, archivos y baja."
+    },
+    {
+      "name": "Notas de crédito",
+      "description": "Modifican un comprobante ya aceptado."
+    },
+    {
+      "name": "Emisores",
+      "description": "Los RUC por los que emite tu integración."
+    },
+    {
+      "name": "Webhooks",
+      "description": "Avisos del ciclo SUNAT, firmados con HMAC."
+    }
+  ],
+  "paths": {
+    "/invoices": {
+      "post": {
+        "tags": [
+          "Comprobantes"
+        ],
+        "summary": "Emitir una factura o boleta",
+        "operationId": "createInvoice",
+        "description": "Valida, firma y envía el comprobante a SUNAT. La respuesta es inmediata con status: pending; el resultado de SUNAT llega por webhook (invoice.accepted / invoice.rejected) o consultando GET /invoices/{id}. El correlativo lo asigna Falconext y es definitivo desde esta respuesta.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InvoiceCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Comprobante aceptado y en cola para SUNAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Invoice"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "402": {
+            "$ref": "#/components/responses/PaymentRequired"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Comprobantes"
+        ],
+        "summary": "Listar comprobantes",
+        "operationId": "listInvoices",
+        "parameters": [
+          {
+            "name": "issuer_id",
+            "in": "query",
+            "description": "Filtra por emisor.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "description": "Filtra por estado.",
+            "schema": {
+              "$ref": "#/components/schemas/InvoiceStatus"
+            }
+          },
+          {
+            "name": "document_type",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/DocumentType"
+            }
+          },
+          {
+            "name": "external_id",
+            "in": "query",
+            "description": "Tu identificador externo.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "issued_from",
+            "in": "query",
+            "description": "Fecha de emisión desde (inclusive).",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "issued_to",
+            "in": "query",
+            "description": "Fecha de emisión hasta (inclusive).",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Máximo de resultados (1–100).",
+            "schema": {
+              "type": "integer",
+              "default": 20,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "starting_after",
+            "in": "query",
+            "description": "Cursor de paginación (id del último resultado).",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista paginada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvoiceList"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        },
+        "description": "Devuelve tus comprobantes paginados, del más reciente al más antiguo. Filtra por emisor, estado, tipo, fecha o tu external_id."
+      }
+    },
+    "/invoices/{id}": {
+      "get": {
+        "tags": [
+          "Comprobantes"
+        ],
+        "summary": "Obtener un comprobante",
+        "operationId": "getInvoice",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "inv_3xK8p2Qm"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "El comprobante con su estado e historial",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Invoice"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "description": "Devuelve el comprobante con su estado actual, el historial de transiciones y el resultado de SUNAT. Úsalo si no quieres depender de webhooks."
+      }
+    },
+    "/invoices/{id}/xml": {
+      "get": {
+        "tags": [
+          "Comprobantes"
+        ],
+        "summary": "Descargar el XML firmado",
+        "operationId": "getInvoiceXml",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "inv_3xK8p2Qm"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Enlace firmado al XML firmado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FileLink"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        },
+        "description": "Enlace firmado al XML tal como se envió a SUNAT, con la firma digital incluida. Válido por 15 minutos."
+      }
+    },
+    "/invoices/{id}/cdr": {
+      "get": {
+        "tags": [
+          "Comprobantes"
+        ],
+        "summary": "Descargar el CDR de SUNAT",
+        "operationId": "getInvoiceCdr",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "inv_3xK8p2Qm"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Enlace firmado al CDR de SUNAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FileLink"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        },
+        "description": "Solo existe cuando el comprobante está accepted, observed o rejected. Antes responde 409 cdr_not_available."
+      }
+    },
+    "/invoices/{id}/pdf": {
+      "get": {
+        "tags": [
+          "Comprobantes"
+        ],
+        "summary": "Descargar el PDF",
+        "operationId": "getInvoicePdf",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "inv_3xK8p2Qm"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Enlace firmado al PDF",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FileLink"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        },
+        "description": "Enlace firmado a la representación impresa (A4 o ticket, según la configuración del emisor), con el QR de SUNAT. Válido por 15 minutos."
+      }
+    },
+    "/invoices/{id}/void": {
+      "post": {
+        "tags": [
+          "Comprobantes"
+        ],
+        "summary": "Anular un comprobante (comunicación de baja)",
+        "operationId": "voidInvoice",
+        "description": "Envía la comunicación de baja a SUNAT. Solo para comprobantes accepted u observed emitidos hace menos de 7 días calendario (plazo SUNAT). Las boletas se dan de baja por resumen diario; el flujo para el integrador es el mismo. El resultado llega por invoice.voided.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "inv_3xK8p2Qm"
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VoidRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Baja en curso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Invoice"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          }
+        }
+      }
+    },
+    "/credit_notes": {
+      "post": {
+        "tags": [
+          "Notas de crédito"
+        ],
+        "summary": "Emitir una nota de crédito",
+        "operationId": "createCreditNote",
+        "description": "Modifica un comprobante ya aceptado. Para un comprobante de más de 7 días, la nota de crédito es la única forma de anularlo.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreditNoteCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Nota aceptada y en cola para SUNAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreditNote"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "402": {
+            "$ref": "#/components/responses/PaymentRequired"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          }
+        }
+      }
+    },
+    "/credit_notes/{id}": {
+      "get": {
+        "tags": [
+          "Notas de crédito"
+        ],
+        "summary": "Obtener una nota de crédito",
+        "operationId": "getCreditNote",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "cn_7Hd2Lp9q"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "La nota con su estado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreditNote"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "description": "Devuelve la nota de crédito con su estado, el comprobante que afecta y el resultado de SUNAT."
+      }
+    },
+    "/issuers": {
+      "get": {
+        "tags": [
+          "Emisores"
+        ],
+        "summary": "Listar tus emisores",
+        "operationId": "listIssuers",
+        "description": "Los RUC por los que tu integración puede emitir. El alta de un emisor nuevo se hace desde la consola; mientras está pending_setup no puede emitir.",
+        "responses": {
+          "200": {
+            "description": "Lista de emisores",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IssuerList"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/issuers/{id}": {
+      "get": {
+        "tags": [
+          "Emisores"
+        ],
+        "summary": "Obtener un emisor",
+        "operationId": "getIssuer",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "iss_8Kp2Qm3x"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "El emisor con sus series y correlativos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Issuer"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "description": "Devuelve el emisor con sus series y el siguiente correlativo de cada una. Útil para mostrar al usuario qué número se asignará."
+      }
+    },
+    "/webhook_endpoints": {
+      "post": {
+        "tags": [
+          "Webhooks"
+        ],
+        "summary": "Registrar un endpoint de webhook",
+        "operationId": "createWebhookEndpoint",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WebhookEndpointCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Endpoint registrado. Guarda el secret: no se vuelve a mostrar.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookEndpoint"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          }
+        },
+        "description": "Registra una URL HTTPS y los eventos que quieres recibir. El secret HMAC se devuelve solo en esta respuesta: guárdalo."
+      },
+      "get": {
+        "tags": [
+          "Webhooks"
+        ],
+        "summary": "Listar endpoints",
+        "operationId": "listWebhookEndpoints",
+        "responses": {
+          "200": {
+            "description": "Tus endpoints",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "example": "list"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/WebhookEndpoint"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        },
+        "description": "Lista los endpoints registrados por tu integración, sin sus secretos."
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "API Key",
+        "description": "Usa tu API key como Bearer token: Authorization: Bearer fx_live_… (producción) o fx_test_… (pruebas)."
+      }
+    },
+    "parameters": {
+      "IdempotencyKey": {
+        "name": "Idempotency-Key",
+        "in": "header",
+        "required": true,
+        "description": "Clave única por operación (UUID v4 recomendado). Si repites la solicitud con la misma clave y el mismo cuerpo, recibes la misma respuesta sin emitir de nuevo. Misma clave con otro cuerpo → 409 idempotency_key_reused. Las claves viven 24 horas.",
+        "schema": {
+          "type": "string",
+          "maxLength": 128,
+          "example": "5f7c1e2a-9b3d-4a6e-8c1f-2d4b6e8a0c12"
+        }
+      }
+    },
+    "responses": {
+      "Unauthorized": {
+        "description": "API key ausente o inválida",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "Recurso no encontrado",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "ValidationError": {
+        "description": "Parámetros inválidos. code indica el campo o la regla SUNAT incumplida.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "Conflict": {
+        "description": "Conflicto de estado o de idempotencia: idempotency_key_reused, invoice_not_voidable, cdr_not_available, void_window_expired.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "PaymentRequired": {
+        "description": "credit_limit_reached: la cuenta superó su tope de crédito mensual. Regulariza el pago o solicita ampliación.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "DocumentType": {
+        "type": "string",
+        "enum": [
+          "invoice",
+          "receipt"
+        ],
+        "description": "invoice = Factura (SUNAT 01, requiere RUC del cliente). receipt = Boleta de venta (SUNAT 03)."
+      },
+      "Currency": {
+        "type": "string",
+        "enum": [
+          "PEN",
+          "USD"
+        ],
+        "default": "PEN"
+      },
+      "InvoiceStatus": {
+        "type": "string",
+        "enum": [
+          "pending",
+          "sent",
+          "accepted",
+          "observed",
+          "rejected",
+          "voiding",
+          "voided"
+        ],
+        "description": "pending: aceptado por Falconext, aún no enviado a SUNAT. sent: enviado, esperando el CDR. accepted: SUNAT lo aceptó (CDR 0). observed: aceptado con observaciones (CDR 4xxx). rejected: SUNAT lo rechazó (CDR 2xxx/3xxx); corrige y emite uno nuevo. voiding: comunicación de baja enviada. voided: baja aceptada."
+      },
+      "CustomerDocumentType": {
+        "type": "string",
+        "enum": [
+          "ruc",
+          "dni",
+          "ce",
+          "passport",
+          "other"
+        ],
+        "description": "Catálogo SUNAT 06: ruc=6, dni=1, ce=4 (carné de extranjería), passport=7, other=0."
+      },
+      "TaxAffectation": {
+        "type": "string",
+        "enum": [
+          "taxed",
+          "exempt",
+          "unaffected",
+          "export",
+          "free"
+        ],
+        "default": "taxed",
+        "description": "Catálogo SUNAT 07. taxed: gravado (10). exempt: exonerado (20). unaffected: inafecto (30). export: exportación (40). free: gratuito (11–16, 21, 31–36 según el caso)."
+      },
+      "Customer": {
+        "type": "object",
+        "required": [
+          "document_type",
+          "document_number",
+          "name"
+        ],
+        "properties": {
+          "document_type": {
+            "$ref": "#/components/schemas/CustomerDocumentType"
+          },
+          "document_number": {
+            "type": "string",
+            "example": "20601234567",
+            "description": "Para invoice debe ser un RUC de 11 dígitos."
+          },
+          "name": {
+            "type": "string",
+            "example": "COMERCIAL ANDINA S.A.C.",
+            "description": "Razón social o nombre completo."
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "compras@andina.pe",
+            "description": "Si lo envías, el comprobante se le envía por correo al ser aceptado."
+          },
+          "address": {
+            "type": "string",
+            "example": "Av. Javier Prado Este 1234, San Isidro, Lima"
+          }
+        }
+      },
+      "InvoiceItem": {
+        "type": "object",
+        "required": [
+          "description",
+          "quantity",
+          "unit_value"
+        ],
+        "properties": {
+          "description": {
+            "type": "string",
+            "example": "Servicio de consultoría — octubre 2026"
+          },
+          "product_code": {
+            "type": "string",
+            "description": "Tu código del producto o servicio. Opcional; se imprime en el comprobante.",
+            "example": "SRV-001"
+          },
+          "quantity": {
+            "type": "number",
+            "format": "double",
+            "minimum": 0.0001,
+            "example": 2
+          },
+          "unit": {
+            "type": "string",
+            "default": "NIU",
+            "description": "Unidad SUNAT (catálogo 03). NIU unidad, ZZ servicio, KGM kilogramo, MTR metro, LTR litro.",
+            "example": "ZZ"
+          },
+          "unit_value": {
+            "type": "number",
+            "format": "double",
+            "description": "Valor unitario **sin IGV**. El IGV lo calcula Falconext según tax_affectation.",
+            "example": 500.0
+          },
+          "tax_affectation": {
+            "$ref": "#/components/schemas/TaxAffectation"
+          },
+          "discount": {
+            "type": "number",
+            "format": "double",
+            "description": "Descuento por línea, en soles, antes de IGV.",
+            "example": 0
+          }
+        }
+      },
+      "InstallmentCreate": {
+        "type": "object",
+        "required": [
+          "amount",
+          "due_date"
+        ],
+        "properties": {
+          "amount": {
+            "type": "number",
+            "format": "double",
+            "example": 590.0
+          },
+          "due_date": {
+            "type": "string",
+            "format": "date",
+            "example": "2026-12-15"
+          }
+        }
+      },
+      "PaymentTerms": {
+        "type": "object",
+        "required": [
+          "type"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "cash",
+              "credit"
+            ],
+            "description": "cash: contado. credit: crédito; SUNAT exige fecha de vencimiento o cuotas."
+          },
+          "due_date": {
+            "type": "string",
+            "format": "date",
+            "description": "Obligatoria en credit si no envías installments.",
+            "example": "2026-12-15"
+          },
+          "installments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InstallmentCreate"
+            },
+            "description": "Cronograma. La suma debe ser igual al total."
+          }
+        }
+      },
+      "InvoiceCreate": {
+        "type": "object",
+        "required": [
+          "issuer_id",
+          "document_type",
+          "customer",
+          "items"
+        ],
+        "properties": {
+          "issuer_id": {
+            "type": "string",
+            "description": "Emisor (RUC) por el que emites. Lo obtienes en GET /issuers.",
+            "example": "iss_8Kp2Qm3x"
+          },
+          "document_type": {
+            "$ref": "#/components/schemas/DocumentType"
+          },
+          "series": {
+            "type": "string",
+            "description": "Serie a usar (F001, B001). Si la omites se usa la serie por defecto del emisor para ese tipo. El número correlativo **siempre** lo asigna Falconext.",
+            "example": "F001"
+          },
+          "issue_date": {
+            "type": "string",
+            "format": "date",
+            "description": "Fecha de emisión. Por defecto, hoy (hora de Lima). SUNAT acepta hasta 3 días calendario hacia atrás para facturas.",
+            "example": "2026-11-02"
+          },
+          "currency": {
+            "$ref": "#/components/schemas/Currency"
+          },
+          "exchange_rate": {
+            "type": "number",
+            "format": "double",
+            "description": "Tipo de cambio si currency es USD. Si lo omites se usa el del día.",
+            "example": 3.72
+          },
+          "customer": {
+            "$ref": "#/components/schemas/Customer"
+          },
+          "items": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "$ref": "#/components/schemas/InvoiceItem"
+            }
+          },
+          "payment_terms": {
+            "$ref": "#/components/schemas/PaymentTerms"
+          },
+          "global_discount": {
+            "type": "number",
+            "format": "double",
+            "description": "Descuento global en soles, antes de IGV.",
+            "example": 0
+          },
+          "purchase_order": {
+            "type": "string",
+            "description": "Orden de compra del cliente; se imprime en el comprobante.",
+            "example": "OC-2026-0455"
+          },
+          "notes": {
+            "type": "string",
+            "description": "Observaciones que se imprimen al pie.",
+            "maxLength": 500
+          },
+          "external_id": {
+            "type": "string",
+            "description": "Tu identificador del documento en tu sistema. Se devuelve en cada respuesta y webhook y puedes filtrar por él.",
+            "example": "INV-10482"
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Hasta 20 pares clave–valor que se devuelven tal cual.",
+            "example": {
+              "branch": "lima-norte"
+            }
+          }
+        }
+      },
+      "Totals": {
+        "type": "object",
+        "description": "Los calcula Falconext; nunca los envíes.",
+        "properties": {
+          "taxable": {
+            "type": "number",
+            "format": "double",
+            "description": "Operaciones gravadas, sin IGV."
+          },
+          "exempt": {
+            "type": "number",
+            "format": "double"
+          },
+          "unaffected": {
+            "type": "number",
+            "format": "double"
+          },
+          "export": {
+            "type": "number",
+            "format": "double"
+          },
+          "free": {
+            "type": "number",
+            "format": "double"
+          },
+          "discount": {
+            "type": "number",
+            "format": "double"
+          },
+          "tax": {
+            "type": "number",
+            "format": "double",
+            "description": "IGV (18%)."
+          },
+          "total": {
+            "type": "number",
+            "format": "double",
+            "example": 1180.0
+          }
+        }
+      },
+      "StatusEvent": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "$ref": "#/components/schemas/InvoiceStatus"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "sunat_code": {
+            "type": "string",
+            "description": "Código de respuesta SUNAT, si aplica.",
+            "example": "0"
+          },
+          "message": {
+            "type": "string",
+            "example": "La Factura numero F001-00001234, ha sido aceptada"
+          }
+        }
+      },
+      "SunatResult": {
+        "type": "object",
+        "properties": {
+          "response_code": {
+            "type": "string",
+            "example": "0"
+          },
+          "response_message": {
+            "type": "string"
+          },
+          "hash": {
+            "type": "string",
+            "description": "Hash del XML firmado (DigestValue); va en el QR del PDF."
+          },
+          "accepted_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "cdr_available": {
+            "type": "boolean",
+            "description": "true cuando el CDR ya se puede descargar."
+          }
+        }
+      },
+      "Files": {
+        "type": "object",
+        "description": "Qué archivos ya existen. Se descargan con GET /invoices/{id}/xml, /cdr y /pdf.",
+        "properties": {
+          "xml": {
+            "type": "boolean"
+          },
+          "cdr": {
+            "type": "boolean"
+          },
+          "pdf": {
+            "type": "boolean"
+          }
+        }
+      },
+      "Invoice": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "inv_3xK8p2Qm"
+          },
+          "object": {
+            "type": "string",
+            "example": "invoice"
+          },
+          "issuer_id": {
+            "type": "string",
+            "example": "iss_8Kp2Qm3x"
+          },
+          "document_type": {
+            "$ref": "#/components/schemas/DocumentType"
+          },
+          "series": {
+            "type": "string",
+            "example": "F001"
+          },
+          "number": {
+            "type": "integer",
+            "example": 1234
+          },
+          "full_number": {
+            "type": "string",
+            "description": "Serie y correlativo tal como figura ante SUNAT.",
+            "example": "F001-00001234"
+          },
+          "status": {
+            "$ref": "#/components/schemas/InvoiceStatus"
+          },
+          "status_history": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StatusEvent"
+            }
+          },
+          "issue_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "currency": {
+            "$ref": "#/components/schemas/Currency"
+          },
+          "exchange_rate": {
+            "type": "number",
+            "format": "double"
+          },
+          "customer": {
+            "$ref": "#/components/schemas/Customer"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InvoiceItem"
+            }
+          },
+          "payment_terms": {
+            "$ref": "#/components/schemas/PaymentTerms"
+          },
+          "totals": {
+            "$ref": "#/components/schemas/Totals"
+          },
+          "sunat": {
+            "$ref": "#/components/schemas/SunatResult"
+          },
+          "files": {
+            "$ref": "#/components/schemas/Files"
+          },
+          "external_id": {
+            "type": "string"
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "InvoiceList": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "type": "string",
+            "example": "list"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Invoice"
+            }
+          },
+          "has_more": {
+            "type": "boolean",
+            "example": false
+          }
+        }
+      },
+      "VoidRequest": {
+        "type": "object",
+        "required": [
+          "reason"
+        ],
+        "properties": {
+          "reason": {
+            "type": "string",
+            "maxLength": 100,
+            "description": "Motivo de la baja; SUNAT lo exige.",
+            "example": "Error en los datos del cliente"
+          }
+        }
+      },
+      "CreditNoteReason": {
+        "type": "string",
+        "enum": [
+          "01",
+          "02",
+          "03",
+          "04",
+          "05",
+          "06",
+          "07",
+          "08",
+          "09",
+          "10",
+          "11",
+          "12",
+          "13"
+        ],
+        "description": "Catálogo SUNAT 09. 01 anulación de la operación · 02 anulación por error en el RUC · 03 corrección por error en la descripción · 04 descuento global · 05 descuento por ítem · 06 devolución total · 07 devolución por ítem · 08 bonificación · 09 disminución en el valor · 10 otros conceptos · 11 ajustes de operaciones de exportación · 12 ajustes afectos al IVAP · 13 corrección del monto neto pendiente de pago."
+      },
+      "CreditNoteCreate": {
+        "type": "object",
+        "required": [
+          "issuer_id",
+          "affects_invoice_id",
+          "reason_code",
+          "description"
+        ],
+        "properties": {
+          "issuer_id": {
+            "type": "string",
+            "example": "iss_8Kp2Qm3x"
+          },
+          "affects_invoice_id": {
+            "type": "string",
+            "description": "El comprobante que modifica. Debe estar accepted u observed.",
+            "example": "inv_3xK8p2Qm"
+          },
+          "reason_code": {
+            "$ref": "#/components/schemas/CreditNoteReason"
+          },
+          "description": {
+            "type": "string",
+            "description": "Sustento de la nota, en palabras.",
+            "example": "Devolución de 1 unidad por defecto de fábrica"
+          },
+          "series": {
+            "type": "string",
+            "description": "Serie de nota (FC01 para facturas, BC01 para boletas). Por defecto, la del emisor.",
+            "example": "FC01"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InvoiceItem"
+            },
+            "description": "Líneas de la nota. Si las omites en una anulación total (01, 06), se toman del comprobante afectado."
+          },
+          "external_id": {
+            "type": "string"
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "CreditNote": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "cn_7Hd2Lp9q"
+          },
+          "object": {
+            "type": "string",
+            "example": "credit_note"
+          },
+          "issuer_id": {
+            "type": "string"
+          },
+          "affects_invoice_id": {
+            "type": "string"
+          },
+          "series": {
+            "type": "string",
+            "example": "FC01"
+          },
+          "number": {
+            "type": "integer"
+          },
+          "full_number": {
+            "type": "string",
+            "example": "FC01-00000018"
+          },
+          "reason_code": {
+            "$ref": "#/components/schemas/CreditNoteReason"
+          },
+          "description": {
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/InvoiceStatus"
+          },
+          "status_history": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StatusEvent"
+            }
+          },
+          "issue_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "currency": {
+            "$ref": "#/components/schemas/Currency"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InvoiceItem"
+            }
+          },
+          "totals": {
+            "$ref": "#/components/schemas/Totals"
+          },
+          "sunat": {
+            "$ref": "#/components/schemas/SunatResult"
+          },
+          "files": {
+            "$ref": "#/components/schemas/Files"
+          },
+          "external_id": {
+            "type": "string"
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "IssuerSeries": {
+        "type": "object",
+        "properties": {
+          "document_type": {
+            "type": "string",
+            "enum": [
+              "invoice",
+              "receipt",
+              "credit_note"
+            ]
+          },
+          "series": {
+            "type": "string",
+            "example": "F001"
+          },
+          "next_number": {
+            "type": "integer",
+            "description": "Siguiente correlativo que se asignará.",
+            "example": 1235
+          },
+          "default": {
+            "type": "boolean"
+          }
+        }
+      },
+      "Issuer": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "iss_8Kp2Qm3x"
+          },
+          "object": {
+            "type": "string",
+            "example": "issuer"
+          },
+          "ruc": {
+            "type": "string",
+            "example": "20610516158"
+          },
+          "legal_name": {
+            "type": "string",
+            "example": "HIERBA SANA COMPANY E.I.R.L."
+          },
+          "trade_name": {
+            "type": "string",
+            "example": "Casa Naturista Hierba Sana"
+          },
+          "address": {
+            "type": "string"
+          },
+          "environment": {
+            "type": "string",
+            "enum": [
+              "live",
+              "test"
+            ],
+            "description": "Las keys fx_test_ solo ven emisores test, que emiten contra el ambiente de pruebas de SUNAT."
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "pending_setup",
+              "suspended"
+            ],
+            "description": "pending_setup: el alta en el proveedor de firma aún no termina; no puede emitir."
+          },
+          "series": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IssuerSeries"
+            }
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "IssuerList": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "type": "string",
+            "example": "list"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Issuer"
+            }
+          },
+          "has_more": {
+            "type": "boolean"
+          }
+        }
+      },
+      "FileLink": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "URL firmada, válida por expires_in segundos. No la guardes: pídela de nuevo cuando la necesites."
+          },
+          "content_type": {
+            "type": "string",
+            "example": "application/xml"
+          },
+          "expires_in": {
+            "type": "integer",
+            "example": 900
+          }
+        }
+      },
+      "WebhookEventName": {
+        "type": "string",
+        "enum": [
+          "invoice.sent",
+          "invoice.accepted",
+          "invoice.observed",
+          "invoice.rejected",
+          "invoice.voided",
+          "credit_note.accepted",
+          "credit_note.rejected"
+        ]
+      },
+      "WebhookEndpointCreate": {
+        "type": "object",
+        "required": [
+          "url",
+          "events"
+        ],
+        "properties": {
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "example": "https://tu-app.com/webhooks/falconext"
+          },
+          "events": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WebhookEventName"
+            },
+            "example": [
+              "invoice.accepted",
+              "invoice.rejected"
+            ]
+          }
+        }
+      },
+      "WebhookEndpoint": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "we_9Lm2Xq"
+          },
+          "object": {
+            "type": "string",
+            "example": "webhook_endpoint"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "events": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WebhookEventName"
+            }
+          },
+          "secret": {
+            "type": "string",
+            "description": "Secreto HMAC. **Se devuelve una sola vez**, al crear el endpoint.",
+            "example": "whsec_…"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "enabled",
+              "disabled"
+            ]
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "invalid_request_error"
+              },
+              "code": {
+                "type": "string",
+                "example": "parameter_missing"
+              },
+              "message": {
+                "type": "string",
+                "example": "El campo customer.document_number es obligatorio."
+              },
+              "param": {
+                "type": "string",
+                "example": "customer.document_number"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

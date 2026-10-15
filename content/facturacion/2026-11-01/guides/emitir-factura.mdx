@@ -1,0 +1,70 @@
+---
+title: Emitir una factura
+description: Factura (SUNAT 01) a un cliente con RUC, al contado o al crédito, en soles o dólares.
+group: Guías
+order: 30
+---
+
+Una **factura** se emite a un cliente con RUC. SUNAT valida que el RUC exista y esté
+activo; si no, el comprobante se rechaza.
+
+## Al contado
+
+```bash
+curl -X POST https://api.falconext.pe/api/v1/invoicing/invoices \
+  -H "Authorization: Bearer $FALCONEXT_API_KEY" \
+  -H "Idempotency-Key: 5f7c1e2a-9b3d-4a6e-8c1f-2d4b6e8a0c12" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "issuer_id": "iss_8Kp2Qm3x",
+    "document_type": "invoice",
+    "customer": { "document_type": "ruc", "document_number": "20601234567", "name": "COMERCIAL ANDINA S.A.C." },
+    "items": [
+      { "description": "Laptop 14\" 16GB", "product_code": "LT-14-16", "quantity": 2, "unit": "NIU", "unit_value": 2500.00 },
+      { "description": "Mouse inalámbrico", "quantity": 2, "unit": "NIU", "unit_value": 45.00 }
+    ],
+    "payment_terms": { "type": "cash" }
+  }'
+```
+
+Los totales los calcula Falconext: `taxable` 5,090.00, `tax` 916.20, `total` 6,006.20.
+
+## Al crédito
+
+SUNAT exige fecha de vencimiento o cronograma de cuotas. La suma de las cuotas debe ser
+igual al total.
+
+```json
+"payment_terms": {
+  "type": "credit",
+  "installments": [
+    { "amount": 3003.10, "due_date": "2026-12-02" },
+    { "amount": 3003.10, "due_date": "2027-01-02" }
+  ]
+}
+```
+
+## En dólares
+
+```json
+"currency": "USD",
+"exchange_rate": 3.72
+```
+
+Si omites `exchange_rate` se usa el tipo de cambio del día de emisión.
+
+## Operaciones exoneradas o inafectas
+
+Cada línea lleva su propia afectación. Un comprobante puede mezclarlas:
+
+```json
+"items": [
+  { "description": "Arroz", "quantity": 10, "unit": "KGM", "unit_value": 4.50, "tax_affectation": "exempt" },
+  { "description": "Aceite", "quantity": 2, "unit": "LTR", "unit_value": 9.00, "tax_affectation": "taxed" }
+]
+```
+
+<Callout type="warning" title="unit_value es sin IGV">
+Envía siempre el valor **sin IGV**. Si tu sistema guarda precios con IGV, divide entre
+1.18 antes de enviar. Falconext calcula el impuesto según `tax_affectation`.
+</Callout>

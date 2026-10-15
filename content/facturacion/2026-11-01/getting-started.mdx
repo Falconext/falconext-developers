@@ -1,0 +1,108 @@
+---
+title: Primeros pasos
+description: Emite tu primera factura electrónica válida ante SUNAT con la API de Falconext en minutos.
+group: Introducción
+order: 1
+---
+
+Bienvenido a **Falconext Facturación Electrónica**. En esta guía emitirás tu primera
+factura de prueba y recibirás su aceptación de SUNAT por webhook. Toma unos cinco minutos.
+
+<Callout type="note" title="Lo que necesitas">
+Una cuenta de Falconext con al menos un emisor en estado `active` y una API key de
+pruebas (`fx_test_…`). Las keys de pruebas emiten contra el ambiente de pruebas de SUNAT:
+los comprobantes no tienen validez tributaria y no consumen tu saldo.
+</Callout>
+
+## Cómo funciona
+
+1. Envías el comprobante en JSON: cliente, líneas y condición de pago. Nada de XML.
+2. Falconext asigna el correlativo, firma el XML y lo envía a SUNAT. La respuesta es inmediata, con `status: pending`.
+3. SUNAT responde en segundos. Te avisamos por webhook (`invoice.accepted` o `invoice.rejected`) y dejamos listos el XML, el CDR y el PDF.
+
+## Emite tu primera factura
+
+<Steps>
+<Step title="Obtén tu emisor">
+
+Cada factura se emite por un **emisor** (un RUC). Lista los tuyos:
+
+```bash
+curl https://api.falconext.pe/api/v1/invoicing/issuers \
+  -H "Authorization: Bearer $FALCONEXT_API_KEY"
+```
+
+Guarda el `id` del emisor (`iss_…`) y revisa que su `status` sea `active`.
+
+</Step>
+<Step title="Envía el comprobante">
+
+```bash
+curl -X POST https://api.falconext.pe/api/v1/invoicing/invoices \
+  -H "Authorization: Bearer $FALCONEXT_API_KEY" \
+  -H "Idempotency-Key: $(uuidgen)" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "issuer_id": "iss_8Kp2Qm3x",
+    "document_type": "invoice",
+    "customer": {
+      "document_type": "ruc",
+      "document_number": "20601234567",
+      "name": "COMERCIAL ANDINA S.A.C.",
+      "email": "compras@andina.pe"
+    },
+    "items": [
+      { "description": "Servicio de consultoría — octubre 2026", "quantity": 1, "unit": "ZZ", "unit_value": 1000.00 }
+    ],
+    "payment_terms": { "type": "cash" },
+    "external_id": "INV-10482"
+  }'
+```
+
+La respuesta llega con el correlativo ya asignado y `status: pending`:
+
+```json
+{
+  "id": "inv_3xK8p2Qm",
+  "object": "invoice",
+  "full_number": "F001-00001234",
+  "status": "pending",
+  "totals": { "taxable": 1000.00, "tax": 180.00, "total": 1180.00 },
+  "external_id": "INV-10482"
+}
+```
+
+</Step>
+<Step title="Recibe la respuesta de SUNAT">
+
+Registra un endpoint y suscríbete a `invoice.accepted` e `invoice.rejected`:
+
+```bash
+curl -X POST https://api.falconext.pe/api/v1/invoicing/webhook_endpoints \
+  -H "Authorization: Bearer $FALCONEXT_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{ "url": "https://tu-app.com/webhooks/falconext", "events": ["invoice.accepted", "invoice.rejected"] }'
+```
+
+Si prefieres consultar, `GET /invoices/{id}` devuelve el estado y su historial.
+
+</Step>
+<Step title="Descarga los archivos">
+
+Cuando el estado sea `accepted`, pide los enlaces firmados:
+
+```bash
+curl https://api.falconext.pe/api/v1/invoicing/invoices/inv_3xK8p2Qm/pdf \
+  -H "Authorization: Bearer $FALCONEXT_API_KEY"
+```
+
+Lo mismo con `/xml` y `/cdr`. Los enlaces duran 15 minutos; pídelos cada vez que los necesites.
+
+</Step>
+</Steps>
+
+## Siguiente
+
+<LinkCard title="Autenticación" href="/facturacion/2026-11-01/authentication" description="API keys por entorno y cómo rotarlas." />
+<LinkCard title="El ciclo SUNAT" href="/facturacion/2026-11-01/guides/ciclo-sunat" description="Qué significa cada estado y qué hacer en cada uno." />
+<LinkCard title="Precios" href="/facturacion/2026-11-01/pricing" description="S/ 0.05 por comprobante. Sin costo de integración." />

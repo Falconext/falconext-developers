@@ -1,0 +1,22 @@
+---
+title: Changelog
+description: Cambios de la API de Facturación por versión.
+group: API
+order: 11
+---
+
+## 2026-11-01 — Beta
+
+Primera versión del contrato. Alcance:
+
+- Emisión de **facturas** y **boletas** (`POST /invoices`), asíncrona, con correlativo asignado en la respuesta.
+- **Idempotencia** obligatoria en todos los `POST` mediante `Idempotency-Key`.
+- Estado con historial y resultado de SUNAT (`GET /invoices/{id}`).
+- Descarga de **XML firmado, CDR y PDF** con enlaces firmados.
+- **Anulación** por comunicación de baja (`POST /invoices/{id}/void`).
+- **Notas de crédito** (`POST /credit_notes`) con el catálogo 09 de SUNAT.
+- Emisores y series (`GET /issuers`).
+- Webhooks `invoice.*` y `credit_note.*` firmados con HMAC.
+
+Fuera de esta versión: notas de débito, guías de remisión, resúmenes diarios como recurso
+propio (las boletas se dan de baja igual que las facturas desde la API).

@@ -1,0 +1,41 @@
+---
+title: Emitir una boleta
+description: Boleta de venta (SUNAT 03) a consumidor final, con o sin DNI.
+group: Guías
+order: 31
+---
+
+Una **boleta** se emite a consumidores finales. A diferencia de la factura, el cliente no
+necesita RUC y, por debajo de S/ 700, ni siquiera documento.
+
+## Con DNI
+
+```bash
+curl -X POST https://api.falconext.pe/api/v1/invoicing/invoices \
+  -H "Authorization: Bearer $FALCONEXT_API_KEY" \
+  -H "Idempotency-Key: $(uuidgen)" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "issuer_id": "iss_8Kp2Qm3x",
+    "document_type": "receipt",
+    "customer": { "document_type": "dni", "document_number": "47065472", "name": "Diego Ortega Roldán" },
+    "items": [ { "description": "Psyllium 200 g", "quantity": 1, "unit_value": 59.32 } ],
+    "payment_terms": { "type": "cash" }
+  }'
+```
+
+## Cliente anónimo
+
+Para ventas menores a S/ 700 sin identificar al comprador, usa el cliente genérico:
+
+```json
+"customer": { "document_type": "other", "document_number": "00000000", "name": "CLIENTES VARIOS" }
+```
+
+Por encima de S/ 700 SUNAT exige DNI o RUC: el comprobante se rechaza con `2xxx`.
+
+## Baja de boletas
+
+Las boletas se anulan igual que las facturas desde la API (`POST /invoices/{id}/void`).
+Internamente SUNAT las procesa por resumen diario, por lo que `invoice.voided` puede
+tardar hasta el día siguiente. El flujo para tu integración es el mismo.

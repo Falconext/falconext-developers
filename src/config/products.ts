@@ -77,12 +77,24 @@ export const products: Product[] = [
     id: "facturacion",
     name: "Facturación Electrónica",
     shortName: "Facturación",
-    tagline: "Emite boletas y facturas SUNAT por API",
-    description: "Comprobantes electrónicos válidos ante SUNAT, con múltiples proveedores.",
+    tagline: "Emite facturas y boletas SUNAT desde tu sistema",
+    description:
+      "Facturas, boletas y notas de crédito válidas ante SUNAT. Falconext firma, envía, guarda el CDR y te avisa por webhook; tú no tocas XML ni certificados.",
     icon: "ReceiptText",
-    status: "planned",
+    status: "beta",
     accent: "#10B981",
-    versions: [],
+    defaultVersion: "2026-11-01",
+    versions: [
+      {
+        id: "2026-11-01",
+        label: "2026-11-01",
+        status: "beta",
+        releasedAt: "2026-11-01",
+        specPath: "/openapi/facturacion/2026-11-01.json",
+        notice:
+          "Beta: el contrato está congelado y el backend se implementa contra él. Las API keys de producción se entregan a integradores piloto.",
+      },
+    ],
   },
   {
     id: "ecommerce",

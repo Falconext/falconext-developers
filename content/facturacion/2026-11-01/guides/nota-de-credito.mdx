@@ -1,0 +1,56 @@
+---
+title: Nota de crédito
+description: Corrige, descuenta o anula un comprobante ya aceptado por SUNAT.
+group: Guías
+order: 32
+---
+
+Una **nota de crédito** modifica un comprobante que SUNAT ya aceptó. Es la única forma
+de anular uno emitido hace más de 7 días, y la forma correcta de devolver o descontar.
+
+## Anulación total
+
+```bash
+curl -X POST https://api.falconext.pe/api/v1/invoicing/credit_notes \
+  -H "Authorization: Bearer $FALCONEXT_API_KEY" \
+  -H "Idempotency-Key: $(uuidgen)" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "issuer_id": "iss_8Kp2Qm3x",
+    "affects_invoice_id": "inv_3xK8p2Qm",
+    "reason_code": "01",
+    "description": "Anulación de la operación por pedido del cliente"
+  }'
+```
+
+Sin `items`, la nota toma todas las líneas del comprobante afectado.
+
+## Devolución parcial
+
+```json
+{
+  "issuer_id": "iss_8Kp2Qm3x",
+  "affects_invoice_id": "inv_3xK8p2Qm",
+  "reason_code": "07",
+  "description": "Devolución de 1 unidad por defecto de fábrica",
+  "items": [ { "description": "Laptop 14\" 16GB", "quantity": 1, "unit_value": 2500.00 } ]
+}
+```
+
+## Motivos más usados
+
+| `reason_code` | Motivo | Cuándo |
+| --- | --- | --- |
+| `01` | Anulación de la operación | El cliente desistió. |
+| `02` | Anulación por error en el RUC | Facturaste al RUC equivocado. |
+| `03` | Corrección por error en la descripción | Error de texto, sin cambio de monto. |
+| `06` | Devolución total | Devolvieron todo. |
+| `07` | Devolución por ítem | Devolvieron parte. |
+| `13` | Corrección del monto pendiente de pago | Ajuste de cuotas en un crédito. |
+
+El catálogo completo (09 de SUNAT) está en la referencia de `CreditNoteReason`.
+
+<Callout type="note" title="El comprobante afectado no cambia">
+Una nota de crédito no modifica el comprobante original: lo complementa. Ambos quedan
+registrados ante SUNAT.
+</Callout>

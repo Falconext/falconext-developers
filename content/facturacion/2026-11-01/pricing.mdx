@@ -1,0 +1,51 @@
+---
+title: Precios
+description: Pagas por comprobante emitido. Sin costo de integración, sin mensualidad por RUC.
+group: Precios
+order: 20
+---
+
+Pagas **por comprobante que SUNAT acepta**. Sin costo de implementación, sin tarifa por
+cada RUC que agregues, sin permanencia. Facturamos a fin de mes lo consumido.
+
+## Tarifa de lanzamiento
+
+| Comprobantes en el mes | Precio por comprobante |
+| --- | --- |
+| Hasta 20,000 | S/ 0.05 |
+| 20,001 a 50,000 | S/ 0.04 |
+| Más de 50,000 | S/ 0.03 |
+
+Precios sin IGV. Mínimo mensual de S/ 30. El tramo se aplica sobre el total del mes, no
+por escalones.
+
+## Qué cuenta y qué no
+
+| Cuenta | No cuenta |
+| --- | --- |
+| Factura o boleta aceptada por SUNAT | Comprobantes de prueba (`fx_test_`) |
+| Nota de crédito aceptada | Comprobantes rechazados por SUNAT |
+| | Consultas, descargas y webhooks |
+| | Comunicaciones de baja |
+
+Un comprobante rechazado no se cobra aunque haya consumido una firma: corrígelo y emítelo
+de nuevo, y pagas una sola vez.
+
+## Qué incluye
+
+- Certificado digital y proveedor de firma (PSE) incluidos. No contratas nada aparte.
+- RUC ilimitados bajo una sola cuenta de integrador.
+- XML, CDR y PDF guardados y descargables sin límite de tiempo.
+- Ambiente de pruebas permanente y gratuito.
+- Webhooks, SDKs y soporte técnico por correo.
+
+## Cómo se cobra
+
+El día 1 de cada mes emitimos la factura del consumo del mes anterior, con el detalle por
+emisor, y la cobramos a la tarjeta registrada. Si prefieres pago por transferencia o
+necesitas un tope de crédito distinto, escríbenos a developers@falconext.pe.
+
+<Callout type="note" title="Alto volumen por un solo RUC">
+Si un solo emisor supera los 3,000 comprobantes al mes de forma sostenida, hay una tarifa
+plana por RUC. Pídela antes de comparar con proveedores de tarifa plana.
+</Callout>
