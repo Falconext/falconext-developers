@@ -729,10 +729,11 @@
           "accepted",
           "observed",
           "rejected",
+          "reconciling",
           "voiding",
           "voided"
         ],
-        "description": "pending: aceptado por Falconext, aún no enviado a SUNAT. sent: enviado, esperando el CDR. accepted: SUNAT lo aceptó (CDR 0). observed: aceptado con observaciones (CDR 4xxx). rejected: SUNAT lo rechazó (CDR 2xxx/3xxx); corrige y emite uno nuevo. voiding: comunicación de baja enviada. voided: baja aceptada."
+        "description": "pending: aceptado por Falconext, aún no enviado a SUNAT (o reintentándose). sent: enviado, esperando el CDR. accepted: SUNAT lo aceptó (CDR 0). observed: aceptado con observaciones (CDR 4xxx); es válido, NO lo reemitas. rejected: SUNAT lo rechazó (CDR 2xxx/3xxx); corrige y emite uno nuevo. reconciling: SUNAT reporta el documento como ya registrado pero no devuelve el CDR. El comprobante existe para SUNAT: **no lo reemitas**, duplicarías. Lo resolvemos y te avisamos por webhook. voiding: comunicación de baja enviada. voided: baja aceptada."
       },
       "CustomerDocumentType": {
         "type": "string",

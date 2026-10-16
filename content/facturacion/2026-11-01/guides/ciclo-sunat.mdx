@@ -15,6 +15,7 @@ El estado del comprobante te dice en cuál está.
 | `accepted` | SUNAT lo aceptó. El CDR está disponible. | Es válido. Entrega el PDF al cliente. |
 | `observed` | SUNAT lo aceptó con observaciones. | Es válido. Lee el mensaje y corrige en adelante. |
 | `rejected` | SUNAT lo rechazó. | Corrige y emite uno **nuevo**. Este no se cobra. |
+| `reconciling` | SUNAT dice que el documento ya está registrado, pero no devuelve el CDR. | **No lo reemitas.** Espera el webhook. |
 | `voiding` | Comunicación de baja enviada. | Espera `invoice.voided`. |
 | `voided` | La baja fue aceptada. | Revierte la venta en tu sistema. |
 
@@ -36,8 +37,29 @@ El CDR es la constancia de SUNAT. Está disponible en `GET /invoices/{id}/cdr` d
 `accepted`, `observed` o `rejected`. Guárdalo si tu auditoría lo exige; Falconext lo
 conserva de todos modos.
 
-<Callout type="note" title="Un CDR aceptado no es lo mismo que SUNAT teniéndolo">
-Muy rara vez, SUNAT acepta un comprobante y no lo refleja en su consulta pública. Falconext
-verifica periódicamente los comprobantes aceptados contra SUNAT; si detecta una diferencia,
-te lo avisa como `invoice.observed` con el detalle.
+## `reconciling`: el estado que existe para que no dupliques
+
+A veces SUNAT responde que el comprobante **ya está registrado** (código 1033) sin
+devolver el CDR. El documento existe para SUNAT; lo que falta es la constancia.
+
+Es poco frecuente pero real: al escribir esto son 118 comprobantes de 18,207 — 6 de cada
+mil. Lo peligroso no es el estado, es la reacción. Si lo leyeras como `rejected`
+corregirías y emitirías de nuevo, y tendrías **dos comprobantes para una sola venta**,
+los dos válidos ante SUNAT. Deshacer eso son dos comunicaciones de baja y una
+conversación con tu cliente.
+
+Por eso `reconciling` no es un error ni un rechazo. Significa: *está en SUNAT, nos falta
+el papel, lo estamos resolviendo*. Lo único que tienes que hacer es nada.
+
+Falconext reconsulta hasta obtener el CDR y te avisa con `invoice.accepted` (o
+`invoice.rejected`, si al final SUNAT lo rechazó). Mientras tanto:
+
+- El comprobante **ya consume** su correlativo: no lo reutilices.
+- `GET /invoices/{id}/cdr` devuelve `404` hasta que el CDR llegue — por eso
+  `sunat.cdr_available` es `false`.
+- El PDF se genera igual: es válido para entregarle al cliente.
+
+<Callout type="warning" title="Nunca reemitas un comprobante en reconciling">
+Si tu integración trata cualquier estado que no sea `accepted` como "falló, reintentar",
+este es el que te va a morder. Trata explícitamente `reconciling` como "esperar".
 </Callout>
