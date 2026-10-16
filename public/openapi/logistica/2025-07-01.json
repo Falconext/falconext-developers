@@ -131,7 +131,7 @@
   },
   "components": {
     "securitySchemes": {
-      "bearerAuth": { "type": "http", "scheme": "bearer", "bearerFormat": "API Key", "description": "Usa tu API key como Bearer token: `Authorization: Bearer fx_live_…`." }
+      "bearerAuth": { "type": "http", "scheme": "bearer", "bearerFormat": "API Key", "description": "Usa tu API key como Bearer token: `Authorization: Bearer sk_live_…`." }
     },
     "responses": {
       "Unauthorized": { "description": "API key ausente o inválida", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },

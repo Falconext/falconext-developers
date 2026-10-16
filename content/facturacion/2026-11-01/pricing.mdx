@@ -23,7 +23,7 @@ por escalones.
 
 | Cuenta | No cuenta |
 | --- | --- |
-| Factura o boleta aceptada por SUNAT | Comprobantes de prueba (`fx_test_`) |
+| Factura o boleta aceptada por SUNAT | Comprobantes de prueba (`sk_test_`) |
 | Nota de crédito aceptada | Comprobantes rechazados por SUNAT |
 | | Consultas, descargas y webhooks |
 | | Comunicaciones de baja |
@@ -39,10 +39,41 @@ de nuevo, y pagas una sola vez.
 - Ambiente de pruebas permanente y gratuito.
 - Webhooks, SDKs y soporte técnico por correo.
 
+## Cómo ver lo que llevas consumido
+
+No hace falta esperar la factura. `GET /usage` devuelve el consumo del mes en curso con el
+detalle por emisor, que es lo que necesitas para repartir el costo entre tus clientes:
+
+```json
+{
+  "period": "2026-11",
+  "status": "open",
+  "billable_count": 1240,
+  "unit_price": 0.05,
+  "subtotal": 62.00,
+  "tax": 11.16,
+  "total": 73.16,
+  "by_issuer": [
+    { "issuer_id": "iss_8Kp2Qm3x", "name": "BODEGA LA ESQUINA", "count": 830 },
+    { "issuer_id": "iss_3xK8p2Qm", "name": "FERRETERÍA CENTRAL", "count": 410 }
+  ]
+}
+```
+
+Mientras el mes está abierto (`status: "open"`) el número se calcula en vivo contra tus
+comprobantes, así que siempre es la verdad. Cuando el período se cierra pasa a
+`"closed"` y **ya no se mueve**: es exactamente lo que dice tu factura, incluso si después
+anulas un comprobante de ese mes.
+
 ## Cómo se cobra
 
-El día 1 de cada mes emitimos la factura del consumo del mes anterior, con el detalle por
-emisor, y la cobramos a la tarjeta registrada. Si prefieres pago por transferencia o
+El día 2 de cada mes cerramos el mes anterior y emitimos la factura, con el detalle por
+emisor, y la cobramos a la tarjeta registrada. Se cierra el 2 y no el 1 por una razón
+práctica: un comprobante emitido el último día a las 23:50 puede estar todavía esperando
+el CDR cuando cambia la fecha, y queremos que caiga en el mes en que lo emitiste.
+
+Si SUNAT acepta un comprobante después del cierre, no se pierde ni se cobra dos veces:
+entra en el período siguiente. Si prefieres pago por transferencia o
 necesitas un tope de crédito distinto, escríbenos a developers@falconext.pe.
 
 <Callout type="note" title="Alto volumen por un solo RUC">

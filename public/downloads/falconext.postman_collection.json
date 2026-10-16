@@ -10,7 +10,7 @@
   },
   "variable": [
     { "key": "baseUrl", "value": "https://sandbox.api.falconext.com/v1" },
-    { "key": "apiKey", "value": "fx_test_replace_me" }
+    { "key": "apiKey", "value": "sk_test_replace_me" }
   ],
   "item": [
     {

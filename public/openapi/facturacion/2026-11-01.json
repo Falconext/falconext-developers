@@ -13,7 +13,7 @@
   "servers": [
     {
       "url": "https://api.falconext.pe/api/v1/invoicing",
-      "description": "Producción. Las keys fx_test_ emiten contra el ambiente de pruebas de SUNAT en este mismo host."
+      "description": "Producción. Las keys sk_test_ emiten contra el ambiente de pruebas de SUNAT en este mismo host."
     }
   ],
   "security": [
@@ -628,6 +628,51 @@
         },
         "description": "Lista los endpoints registrados por tu integración, sin sus secretos."
       }
+    },
+    "/usage": {
+      "get": {
+        "operationId": "getUsage",
+        "summary": "Consumo del período",
+        "description": "Lo que llevas consumido este mes y cuánto sale, con el detalle por emisor. Mientras el período está abierto el número se calcula en vivo contra tus comprobantes; una vez cerrado devuelve lo congelado, que es exactamente lo que dice tu factura.",
+        "tags": [
+          "Usage"
+        ],
+        "parameters": [
+          {
+            "name": "period",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\\\d{4}-\\\\d{2}$"
+            },
+            "description": "Mes a consultar, `AAAA-MM`. Por defecto, el mes en curso.",
+            "example": "2026-11"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "El consumo del período.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Usage"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "API key inválida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -636,7 +681,7 @@
         "type": "http",
         "scheme": "bearer",
         "bearerFormat": "API Key",
-        "description": "Usa tu API key como Bearer token: Authorization: Bearer fx_live_… (producción) o fx_test_… (pruebas)."
+        "description": "Usa tu API key como Bearer token: Authorization: Bearer sk_live_… (producción) o sk_test_… (pruebas)."
       }
     },
     "parameters": {
@@ -1402,7 +1447,7 @@
               "live",
               "test"
             ],
-            "description": "Las keys fx_test_ solo ven emisores test, que emiten contra el ambiente de pruebas de SUNAT."
+            "description": "Las keys sk_test_ solo ven emisores test, que emiten contra el ambiente de pruebas de SUNAT."
           },
           "status": {
             "type": "string",
@@ -1557,6 +1602,91 @@
               "param": {
                 "type": "string",
                 "example": "customer.document_number"
+              }
+            }
+          }
+        }
+      },
+      "Usage": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "type": "string",
+            "example": "usage"
+          },
+          "period": {
+            "type": "string",
+            "description": "Mes facturado, `AAAA-MM` en hora de Lima.",
+            "example": "2026-11"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "open",
+              "closed"
+            ],
+            "description": "open: el mes está en curso y el número se calcula en vivo. closed: el período se cerró y esto es exactamente lo que dice tu factura; ya no cambia."
+          },
+          "closed_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Solo cuando status es closed."
+          },
+          "billable_count": {
+            "type": "integer",
+            "description": "Comprobantes que SUNAT aceptó en el período. Los rechazados no cuentan.",
+            "example": 1240
+          },
+          "unit_price": {
+            "type": "number",
+            "format": "double",
+            "description": "Precio del tramo que corresponde al volumen del mes. Se aplica al total, no por escalones.",
+            "example": 0.05
+          },
+          "subtotal": {
+            "type": "number",
+            "format": "double",
+            "description": "Sin IGV. Si el consumo quedó bajo el mínimo mensual, este es el mínimo.",
+            "example": 62.0
+          },
+          "tax": {
+            "type": "number",
+            "format": "double",
+            "example": 11.16
+          },
+          "total": {
+            "type": "number",
+            "format": "double",
+            "example": 73.16
+          },
+          "minimum_applied": {
+            "type": "boolean",
+            "description": "true cuando lo que se cobra es el mínimo mensual y no el consumo."
+          },
+          "currency": {
+            "type": "string",
+            "example": "PEN"
+          },
+          "by_issuer": {
+            "type": "array",
+            "description": "Cuántos comprobantes puso cada emisor. Para repartir el costo entre tus clientes.",
+            "items": {
+              "type": "object",
+              "properties": {
+                "issuer_id": {
+                  "type": "string",
+                  "example": "iss_8Kp2Qm3x"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "ruc": {
+                  "type": "string"
+                },
+                "count": {
+                  "type": "integer",
+                  "example": 830
+                }
               }
             }
           }

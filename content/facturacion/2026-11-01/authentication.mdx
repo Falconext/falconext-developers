@@ -12,8 +12,8 @@ integrador, a un entorno, y puede emitir por todos los emisores (RUC) de ese ent
 
 | Prefijo | Entorno | Qué hace |
 | --- | --- | --- |
-| `fx_test_…` | Pruebas | Emite contra el ambiente de pruebas de SUNAT. Sin validez tributaria, sin costo. |
-| `fx_live_…` | Producción | Emite comprobantes reales. Cada uno consume tu plan. |
+| `sk_test_…` | Pruebas | Emite contra el ambiente de pruebas de SUNAT. Sin validez tributaria, sin costo. |
+| `sk_live_…` | Producción | Emite comprobantes reales. Cada uno consume tu plan. |
 
 ## Cómo enviarla
 
@@ -22,10 +22,10 @@ Como Bearer token en la cabecera `Authorization`:
 ```http
 GET /api/v1/invoicing/issuers HTTP/1.1
 Host: api.falconext.pe
-Authorization: Bearer fx_live_a1b2c3…
+Authorization: Bearer sk_live_a1b2c3…
 ```
 
-También se acepta `x-api-key: fx_live_…`, pero prefiere `Authorization`.
+También se acepta `x-api-key: sk_live_…`, pero prefiere `Authorization`.
 
 <Callout type="warning" title="Nunca expongas una key de producción">
 Úsala solo desde tu servidor. Si una key se filtra, revócala desde la consola: deja de
@@ -48,4 +48,4 @@ Una key solo ve sus propios emisores. Intentar emitir con un `issuer_id` ajeno d
 | `401` | `missing_api_key` | No enviaste la cabecera. |
 | `401` | `invalid_api_key` | La key no existe o fue revocada. |
 | `403` | `issuer_forbidden` | El emisor no pertenece a tu integración. |
-| `403` | `environment_mismatch` | Key `fx_test_` con un emisor `live`, o al revés. |
+| `403` | `environment_mismatch` | Key `sk_test_` con un emisor `live`, o al revés. |
