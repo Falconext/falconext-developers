@@ -1452,11 +1452,12 @@
           "status": {
             "type": "string",
             "enum": [
-              "active",
               "pending_setup",
-              "suspended"
+              "pending",
+              "active",
+              "not_authorized"
             ],
-            "description": "pending_setup: el alta en el proveedor de firma aún no termina; no puede emitir."
+            "description": "pending_setup: todavía le falta configuración de nuestro lado; escríbenos. pending: el alta del RUC ante SUNAT está en curso. Suele estar listo al día siguiente. Emitir antes devuelve 409 y no consume correlativo. active: SUNAT ya le aceptó un comprobante. Es la única prueba de que la habilitación funcionó. not_authorized: SUNAT rechazó el RUC por falta de habilitación (código 0111 o 0154). No se arregla reintentando: lo tiene que resolver el contribuyente en SUNAT. Mira status_detail."
           },
           "series": {
             "type": "array",
@@ -1467,6 +1468,16 @@
           "created_at": {
             "type": "string",
             "format": "date-time"
+          },
+          "status_detail": {
+            "type": "string",
+            "description": "Cuando status es not_authorized, qué tiene que arreglar el contribuyente, en palabras.",
+            "example": "SUNAT responde 0111: el RUC no tiene el perfil para enviar comprobantes electrónicos."
+          },
+          "available_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Solo con status pending: cuándo estimamos que el alta estará completa. Es orientativo."
           }
         }
       },

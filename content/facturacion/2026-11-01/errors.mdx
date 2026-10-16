@@ -72,3 +72,46 @@ SUNAT en `status_history`. Lo recibes en el webhook `invoice.rejected`.
 
 Un comprobante rechazado **no se corrige**: emite uno nuevo con los datos correctos. El
 correlativo rechazado queda registrado así ante SUNAT y no se reutiliza.
+
+## Dar de alta un emisor no es inmediato
+
+Registrar un RUC nuevo dispara un alta ante SUNAT que **suele completarse al día
+siguiente**. No es instantáneo y no depende de nosotros: lo ejecuta el proveedor de firma
+y lo aprueba SUNAT, que a veces tiene intermitencias.
+
+Mientras tanto el emisor está en `status: "pending"` y cualquier emisión devuelve `409`:
+
+```json
+{
+  "error": {
+    "type": "invalid_request_error",
+    "code": "issuer_not_ready",
+    "message": "El alta de este RUC ante SUNAT todavía está en curso. Suele estar listo al día siguiente.",
+    "param": "issuer_id"
+  },
+  "available_at": "2026-11-03T14:20:00Z"
+}
+```
+
+Esto es deliberado y te ahorra plata. El correlativo se asigna **al crear** el comprobante,
+antes de que SUNAT opine, así que un intento contra un RUC que todavía no está habilitado
+gasta un número de serie que no se recupera. Preferimos devolverte un `409` barato.
+
+| Código | Qué pasó | Qué hacer |
+| --- | --- | --- |
+| `issuer_not_ready` | El alta sigue en curso. | Espera a `available_at` y reintenta. |
+| `issuer_not_authorized` | SUNAT rechazó el RUC (`0111` o `0154`). | Lee `status_detail`: tu cliente debe resolverlo en SUNAT. |
+| `issuer_not_configured` | Falta configuración de nuestro lado. | Escríbenos. |
+
+### Si el emisor queda `not_authorized`
+
+Son dos causas, las dos del lado del contribuyente y ninguna se arregla reintentando:
+
+- **`0111`** — el RUC no está habilitado como **emisor electrónico**. Se habilita desde
+  SUNAT con la clave SOL.
+- **`0154`** — el RUC no **autorizó al proveedor de firma (PSE)**. También se hace desde la
+  clave SOL del contribuyente.
+
+Bloqueamos al emisor en cuanto SUNAT responde alguno de los dos. No es una limitación: es
+lo que evita que tu integración siga gastando correlativos contra un problema que sólo
+puede resolver tu cliente.
