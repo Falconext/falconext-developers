@@ -1,0 +1,32 @@
+---
+title: Mostrar tu catálogo
+description: Precios, ofertas, fotos, tallas y stock disponible en tu web.
+group: Guías
+order: 21
+---
+
+`GET /products` devuelve tus productos activos, del más antiguo al más nuevo, de a `limit`
+(hasta 100). Para la siguiente página manda `cursor` con el `next_cursor` que recibiste.
+
+```bash
+curl "https://api.krezka.com/api/v1/erp/products?published=true&limit=50" \
+  -H "Authorization: Bearer sk_live_…"
+```
+
+## Qué mostrar
+
+- **Precio**: `price` ya incluye IGV. Si `sale_price` no es `null`, la oferta está vigente hoy; fuera de `sale_starts_on` / `sale_ends_on` ya viene `null`.
+- **Agotado**: usa `available` (el stock menos lo reservado en pedidos), no `stock`. `availability` ya te dice `in_stock` o `out_of_stock`.
+- **Fotos**: `images` trae URLs fijas que puedes poner directo en tu web. La primera es la principal.
+- **Tallas y colores**: cada elemento de `variants` tiene su `id`, sus `attributes` (`{ "Talla": "M", "Color": "Negro" }`), su precio, su foto y su `available`.
+- **Por sede**: `stock_by_location` desglosa el stock; con `location_id` filtras una sede.
+
+## Buscar
+
+`search` busca por palabras en el nombre, el sku y los códigos de barras, incluidos los de
+cada talla y de cada paquete: escanear el código de una caja encuentra el producto.
+
+<Callout type="note" title="Mantén tu web al día">
+Lee el catálogo cada cierto tiempo (por ejemplo cada 10 minutos) o justo antes de mostrar un
+producto. Krezka es la fuente de verdad: si vendes en tu tienda física, el stock ya cambió.
+</Callout>

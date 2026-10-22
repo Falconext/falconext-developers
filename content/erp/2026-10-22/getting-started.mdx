@@ -1,0 +1,63 @@
+---
+title: Primeros pasos
+description: Conecta tu página web con tu catálogo, tu stock y tus ventas de Krezka en minutos.
+group: Introducción
+order: 1
+---
+
+La **API de Krezka** deja que tu página web o tu sistema trabajen con los mismos datos que
+tu panel: los productos con su precio, oferta, fotos, tallas y stock; los ajustes de stock;
+y las ventas, que se emiten con su boleta o factura igual que en tu POS.
+
+<Callout type="note" title="Lo que necesitas">
+Un negocio en Krezka con el módulo **API de Krezka** en su plan y una clave creada en el
+panel: **API de Krezka → Tus claves**. Empieza con una clave **de prueba** (`sk_test_…`):
+lee tu catálogo real, pero lo que creas o vendes no se guarda.
+</Callout>
+
+## Cómo funciona
+
+1. Tu web pide los productos y los muestra. Usa `available` (stock sin lo reservado) para saber si algo está agotado.
+2. Cuando un cliente compra, tu servidor manda la venta. Krezka revisa el stock, emite la boleta o factura, baja el stock y registra el pago en caja.
+3. La respuesta llega enseguida con `status: pending`; consulta `GET /sales/{id}` para ver cuando SUNAT la acepta.
+
+## Tu primera llamada
+
+<Steps>
+<Step title="Lista tus productos">
+
+```bash
+curl https://api.krezka.com/api/v1/erp/products?limit=5 \
+  -H "Authorization: Bearer sk_test_…"
+```
+
+</Step>
+<Step title="Registra una venta de prueba">
+
+```bash
+curl -X POST https://api.krezka.com/api/v1/erp/sales \
+  -H "Authorization: Bearer sk_test_…" \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: $(uuidgen)" \
+  -d '{
+    "items": [{ "product_id": 8507, "quantity": 2 }],
+    "payment": { "method": "card" },
+    "external_id": "WEB-1001"
+  }'
+```
+
+Con la clave de prueba la respuesta trae `livemode: false`, `status: "test"` y el número
+que le tocaría (`number_preview`). Nada se emite.
+
+</Step>
+<Step title="Pasa a producción">
+
+Crea una clave **real** (`sk_live_…`) en el panel y úsala desde tu servidor. Desde ese
+momento las ventas se emiten a SUNAT y el stock se mueve de verdad.
+
+</Step>
+</Steps>
+
+<LinkCard title="Modo prueba" href="/erp/2026-10-22/modo-prueba" description="Qué se guarda y qué no con una clave sk_test_." />
+<LinkCard title="Registrar ventas" href="/erp/2026-10-22/guides/registrar-ventas" description="Boleta, factura o nota de venta desde tu web." />
+<LinkCard title="Mostrar tu catálogo" href="/erp/2026-10-22/guides/mostrar-catalogo" description="Precios, ofertas, fotos, tallas y stock disponible." />

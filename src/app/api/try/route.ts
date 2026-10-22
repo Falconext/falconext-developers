@@ -29,7 +29,9 @@ const ALLOWED_HOSTS = new Set([
 const REAL_BASE = "https://api.falconext.pe/api/v1/logistics";
 
 /** Headers que se propagan al upstream (el resto se descarta). */
-const SAFE_HEADERS = new Set(["authorization", "content-type"]);
+// idempotency-key: los POST de Facturación y del ERP la exigen; sin ella el
+// probador no podía crear nada.
+const SAFE_HEADERS = new Set(["authorization", "content-type", "idempotency-key"]);
 
 function resolveTarget(url: URL): URL {
   // El gateway de marca aún no existe: mapear `api(.sandbox).falconext.com/v1/x`
