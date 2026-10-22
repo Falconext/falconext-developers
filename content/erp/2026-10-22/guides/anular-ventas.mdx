@@ -1,0 +1,29 @@
+---
+title: Anular una venta
+description: Devoluciones y pedidos cancelados, como lo exige SUNAT.
+group: Guías
+order: 24
+---
+
+```bash
+curl -X POST https://api.krezka.com/api/v1/erp/sales/sale_HKA2DiFel0Cz/void \
+  -H "Authorization: Bearer sk_live_…" \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: $(uuidgen)" \
+  -d '{ "reason": "El cliente devolvió el pedido" }'
+```
+
+Krezka anula como corresponde a cada documento:
+
+| La venta es | Qué pasa |
+| --- | --- |
+| Nota de venta | Se anula directo. |
+| Boleta o factura **aceptada** | Se emite su **nota de crédito** (anulación de la operación) y se envía a SUNAT. Sale en `credit_note`. |
+| Boleta o factura **en camino** a SUNAT | `409 invalid_state`: espera a `accepted` y vuelve a pedirla. |
+| Boleta o factura **rechazada** | `409 invalid_state`: para SUNAT nunca existió, no hay nada que anular. |
+
+En todos los casos que se anula, **el stock vuelve** y **el cobro se quita de caja**.
+`reason` es obligatorio (SUNAT lo pide) y admite hasta 100 caracteres. Anular dos veces
+responde `409 already_voided` sin tocar el stock de nuevo.
+
+Si tienes un webhook, te llega `sale.voided`.

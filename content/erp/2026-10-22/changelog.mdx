@@ -5,6 +5,13 @@ group: API
 order: 11
 ---
 
+## 2026-10-22 — Beta (actualización)
+
+- Anular ventas: `POST /sales/{id}/void` (nota de crédito si la boleta o factura ya fue aceptada).
+- PDF de la venta: `GET /sales/{id}/pdf`.
+- Webhooks: `sale.accepted`, `sale.observed`, `sale.rejected`, `sale.voided`.
+- Clientes: listar, ver, crear y editar. Crear categorías y marcas.
+
 ## 2026-10-22 — Beta
 
 - Productos: listar, ver, crear (con tallas, paquetes, precios por mayor, farmacia y lotes) y editar.

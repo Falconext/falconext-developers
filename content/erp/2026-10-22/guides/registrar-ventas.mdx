@@ -55,6 +55,14 @@ curl https://api.krezka.com/api/v1/erp/sales/sale_HKA2DiFel0Cz \
 ```
 
 `status` pasa a `accepted`. Si queda en `pending` con `sunat_message`, Krezka reintenta solo.
+Mejor aún: registra un [webhook](/erp/2026-10-22/webhooks) y te avisamos.
+
+## El PDF
+
+`GET /sales/{id}/pdf?format=a4` (o `ticket`, `a5`) devuelve el enlace al PDF, el mismo que
+imprime tu panel. Para boletas y facturas, espera a `accepted` antes de enviarlo.
+
+Para devoluciones mira [Anular una venta](/erp/2026-10-22/guides/anular-ventas).
 
 <Callout type="warning" title="Un pedido, una venta">
 Manda siempre tu número de pedido en `external_id`. Si tu web lo manda dos veces —un
