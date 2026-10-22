@@ -1,0 +1,2054 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "API de Krezka (ERP)",
+    "version": "2026-10-22",
+    "description": "Tu catálogo, tu stock y tus ventas de Krezka desde tu página web o tu sistema. Las claves se crean en el panel: API de Krezka. Con una clave sk_test_ las escrituras se validan de verdad pero no se guardan (livemode: false)."
+  },
+  "servers": [
+    {
+      "url": "https://api.krezka.com/api/v1/erp",
+      "description": "Producción. Las claves sk_test_ funcionan en este mismo host en modo prueba."
+    }
+  ],
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "Productos",
+      "description": "Tu catálogo: precios, ofertas, fotos, variantes, paquetes y lotes."
+    },
+    {
+      "name": "Stock",
+      "description": "Ajustes de stock con motivo; quedan en tu kardex."
+    },
+    {
+      "name": "Ventas",
+      "description": "Boletas, facturas y notas de venta por el mismo camino de tu POS."
+    },
+    {
+      "name": "Datos",
+      "description": "Sedes, categorías, marcas y unidades para armar tus llamadas."
+    }
+  ],
+  "paths": {
+    "/products": {
+      "get": {
+        "tags": [
+          "Productos"
+        ],
+        "summary": "Listar productos",
+        "operationId": "listProducts",
+        "description": "Productos activos con su variante, oferta vigente y stock disponible (sin lo reservado). Se pagina por cursor.",
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Busca en nombre, sku y códigos de barras (incluye tallas y paquetes)."
+          },
+          {
+            "name": "category_id",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "location_id",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Stock de esa sede."
+          },
+          {
+            "name": "published",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            },
+            "description": "true: solo lo publicado en tienda."
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "El next_cursor de la página anterior."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Una página de productos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductList"
+                },
+                "example": {
+                  "object": "list",
+                  "data": [
+                    {
+                      "object": "product",
+                      "id": 8505,
+                      "type": "product",
+                      "sku": "MOD-001",
+                      "barcode": null,
+                      "name": "Polo básico algodón premium",
+                      "description": "<p>Polo de algodón peinado.</p>",
+                      "price": 49.9,
+                      "sale_price": 39.9,
+                      "sale_starts_on": "2026-11-27",
+                      "sale_ends_on": "2026-11-30",
+                      "currency": "PEN",
+                      "tax_included": true,
+                      "unit": "NIU",
+                      "category": {
+                        "id": 274,
+                        "name": "Ropa - Polos"
+                      },
+                      "brand": {
+                        "id": 432,
+                        "name": "Krezka Basics"
+                      },
+                      "images": [
+                        "https://api.krezka.com/api/public/img/abc123"
+                      ],
+                      "stock": 65,
+                      "reserved": 0,
+                      "available": 65,
+                      "stock_by_location": [
+                        {
+                          "location_id": 25,
+                          "location": "Sede Principal",
+                          "quantity": 65,
+                          "reserved": 0,
+                          "available": 65
+                        }
+                      ],
+                      "availability": "in_stock",
+                      "wholesale_prices": [],
+                      "packs": [],
+                      "pharmacy": null,
+                      "batches": [],
+                      "published_in_store": true,
+                      "featured": true,
+                      "attributes": null,
+                      "variants": [
+                        {
+                          "id": 8507,
+                          "sku": "MOD-001-NEGR-M",
+                          "barcode": "77555000112",
+                          "attributes": {
+                            "Color": "Negro",
+                            "Talla": "M"
+                          },
+                          "price": 49.9,
+                          "image": null,
+                          "stock": 5,
+                          "reserved": 0,
+                          "available": 5,
+                          "stock_by_location": [
+                            {
+                              "location_id": 25,
+                              "location": "Sede Principal",
+                              "quantity": 5,
+                              "reserved": 0,
+                              "available": 5
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ],
+                  "has_more": true,
+                  "next_cursor": "8505"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Productos"
+        ],
+        "summary": "Crear un producto",
+        "operationId": "createProduct",
+        "description": "name y price son obligatorios. El stock inicial entra como ajuste y queda en el kardex. Con sk_test_ devuelve el producto simulado (id: null, livemode: false).",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductCreate"
+              },
+              "example": {
+                "name": "Polo básico algodón",
+                "price": 49.9,
+                "sku": "POLO-001",
+                "stock": 10,
+                "published_in_store": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Producto creado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Product"
+                },
+                "example": {
+                  "object": "product",
+                  "id": 8505,
+                  "type": "product",
+                  "sku": "MOD-001",
+                  "barcode": null,
+                  "name": "Polo básico algodón premium",
+                  "description": "<p>Polo de algodón peinado.</p>",
+                  "price": 49.9,
+                  "sale_price": 39.9,
+                  "sale_starts_on": "2026-11-27",
+                  "sale_ends_on": "2026-11-30",
+                  "currency": "PEN",
+                  "tax_included": true,
+                  "unit": "NIU",
+                  "category": {
+                    "id": 274,
+                    "name": "Ropa - Polos"
+                  },
+                  "brand": {
+                    "id": 432,
+                    "name": "Krezka Basics"
+                  },
+                  "images": [
+                    "https://api.krezka.com/api/public/img/abc123"
+                  ],
+                  "stock": 65,
+                  "reserved": 0,
+                  "available": 65,
+                  "stock_by_location": [
+                    {
+                      "location_id": 25,
+                      "location": "Sede Principal",
+                      "quantity": 65,
+                      "reserved": 0,
+                      "available": 65
+                    }
+                  ],
+                  "availability": "in_stock",
+                  "wholesale_prices": [],
+                  "packs": [],
+                  "pharmacy": null,
+                  "batches": [],
+                  "published_in_store": true,
+                  "featured": true,
+                  "attributes": null,
+                  "variants": [
+                    {
+                      "id": 8507,
+                      "sku": "MOD-001-NEGR-M",
+                      "barcode": "77555000112",
+                      "attributes": {
+                        "Color": "Negro",
+                        "Talla": "M"
+                      },
+                      "price": 49.9,
+                      "image": null,
+                      "stock": 5,
+                      "reserved": 0,
+                      "available": 5,
+                      "stock_by_location": [
+                        {
+                          "location_id": 25,
+                          "location": "Sede Principal",
+                          "quantity": 5,
+                          "reserved": 0,
+                          "available": 5
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          }
+        }
+      }
+    },
+    "/products/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "get": {
+        "tags": [
+          "Productos"
+        ],
+        "summary": "Ver un producto",
+        "operationId": "getProduct",
+        "parameters": [
+          {
+            "name": "location_id",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "El producto",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Product"
+                },
+                "example": {
+                  "object": "product",
+                  "id": 8505,
+                  "type": "product",
+                  "sku": "MOD-001",
+                  "barcode": null,
+                  "name": "Polo básico algodón premium",
+                  "description": "<p>Polo de algodón peinado.</p>",
+                  "price": 49.9,
+                  "sale_price": 39.9,
+                  "sale_starts_on": "2026-11-27",
+                  "sale_ends_on": "2026-11-30",
+                  "currency": "PEN",
+                  "tax_included": true,
+                  "unit": "NIU",
+                  "category": {
+                    "id": 274,
+                    "name": "Ropa - Polos"
+                  },
+                  "brand": {
+                    "id": 432,
+                    "name": "Krezka Basics"
+                  },
+                  "images": [
+                    "https://api.krezka.com/api/public/img/abc123"
+                  ],
+                  "stock": 65,
+                  "reserved": 0,
+                  "available": 65,
+                  "stock_by_location": [
+                    {
+                      "location_id": 25,
+                      "location": "Sede Principal",
+                      "quantity": 65,
+                      "reserved": 0,
+                      "available": 65
+                    }
+                  ],
+                  "availability": "in_stock",
+                  "wholesale_prices": [],
+                  "packs": [],
+                  "pharmacy": null,
+                  "batches": [],
+                  "published_in_store": true,
+                  "featured": true,
+                  "attributes": null,
+                  "variants": [
+                    {
+                      "id": 8507,
+                      "sku": "MOD-001-NEGR-M",
+                      "barcode": "77555000112",
+                      "attributes": {
+                        "Color": "Negro",
+                        "Talla": "M"
+                      },
+                      "price": 49.9,
+                      "image": null,
+                      "stock": 5,
+                      "reserved": 0,
+                      "available": 5,
+                      "stock_by_location": [
+                        {
+                          "location_id": 25,
+                          "location": "Sede Principal",
+                          "quantity": 5,
+                          "reserved": 0,
+                          "available": 5
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Productos"
+        ],
+        "summary": "Editar un producto",
+        "operationId": "updateProduct",
+        "description": "Solo los campos que mandas. El stock no se cambia aquí (usa stock_adjustments). Con sk_test_ devuelve el producto actual y `changes`.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductUpdate"
+              },
+              "example": {
+                "price": 45.9,
+                "sale_price": 39.9,
+                "sale_ends_on": "2026-12-31"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Producto actualizado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Product"
+                },
+                "example": {
+                  "object": "product",
+                  "id": 8505,
+                  "type": "product",
+                  "sku": "MOD-001",
+                  "barcode": null,
+                  "name": "Polo básico algodón premium",
+                  "description": "<p>Polo de algodón peinado.</p>",
+                  "price": 49.9,
+                  "sale_price": 39.9,
+                  "sale_starts_on": "2026-11-27",
+                  "sale_ends_on": "2026-11-30",
+                  "currency": "PEN",
+                  "tax_included": true,
+                  "unit": "NIU",
+                  "category": {
+                    "id": 274,
+                    "name": "Ropa - Polos"
+                  },
+                  "brand": {
+                    "id": 432,
+                    "name": "Krezka Basics"
+                  },
+                  "images": [
+                    "https://api.krezka.com/api/public/img/abc123"
+                  ],
+                  "stock": 65,
+                  "reserved": 0,
+                  "available": 65,
+                  "stock_by_location": [
+                    {
+                      "location_id": 25,
+                      "location": "Sede Principal",
+                      "quantity": 65,
+                      "reserved": 0,
+                      "available": 65
+                    }
+                  ],
+                  "availability": "in_stock",
+                  "wholesale_prices": [],
+                  "packs": [],
+                  "pharmacy": null,
+                  "batches": [],
+                  "published_in_store": true,
+                  "featured": true,
+                  "attributes": null,
+                  "variants": [
+                    {
+                      "id": 8507,
+                      "sku": "MOD-001-NEGR-M",
+                      "barcode": "77555000112",
+                      "attributes": {
+                        "Color": "Negro",
+                        "Talla": "M"
+                      },
+                      "price": 49.9,
+                      "image": null,
+                      "stock": 5,
+                      "reserved": 0,
+                      "available": 5,
+                      "stock_by_location": [
+                        {
+                          "location_id": 25,
+                          "location": "Sede Principal",
+                          "quantity": 5,
+                          "reserved": 0,
+                          "available": 5
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          }
+        }
+      }
+    },
+    "/products/{id}/stock_adjustments": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          },
+          "description": "Si tiene tallas, el id de la variante."
+        }
+      ],
+      "post": {
+        "tags": [
+          "Stock"
+        ],
+        "summary": "Ajustar el stock",
+        "operationId": "adjustStock",
+        "description": "Manda change (cuánto suma o resta) o quantity (cómo queda), uno solo, con su motivo. En farmacia/botica/droguería va con batch.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StockAdjustmentCreate"
+              },
+              "example": {
+                "change": -2,
+                "reason": "damaged",
+                "note": "Se rompieron en el almacén"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Ajuste hecho",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StockAdjustment"
+                },
+                "example": {
+                  "object": "stock_adjustment",
+                  "product_id": 8429,
+                  "location_id": 19,
+                  "previous_quantity": 60,
+                  "quantity": 58,
+                  "change": -2,
+                  "reason": "damaged"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          }
+        }
+      }
+    },
+    "/sales": {
+      "get": {
+        "tags": [
+          "Ventas"
+        ],
+        "summary": "Listar ventas",
+        "operationId": "listSales",
+        "description": "Las ventas que llegaron por la API, de la más reciente.",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          },
+          {
+            "name": "starting_after",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Id de la última venta de la página anterior."
+          },
+          {
+            "name": "external_id",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Tu número de pedido."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Una página de ventas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SaleList"
+                },
+                "example": {
+                  "object": "list",
+                  "data": [
+                    {
+                      "object": "sale",
+                      "livemode": true,
+                      "id": "sale_HKA2DiFel0Cz",
+                      "external_id": "WEB-1001",
+                      "document_type": "receipt",
+                      "number": "B001-1250",
+                      "status": "pending",
+                      "sunat_message": null,
+                      "issued_at": "2026-10-22T16:43:12.311Z",
+                      "location_id": 19,
+                      "customer": {
+                        "document_type": "dni",
+                        "document_number": "12345678",
+                        "name": "Ana Pérez"
+                      },
+                      "items": [
+                        {
+                          "product_id": 8507,
+                          "sku": "MOD-001-NEGR-M",
+                          "description": "Polo básico algodón premium - Negro / M",
+                          "quantity": 2,
+                          "unit_price": 49.9,
+                          "total": 99.8
+                        },
+                        {
+                          "product_id": null,
+                          "sku": null,
+                          "description": "Envío a domicilio",
+                          "quantity": 1,
+                          "unit_price": 10,
+                          "total": 10
+                        }
+                      ],
+                      "subtotal": 93.05,
+                      "igv": 16.75,
+                      "total": 109.8,
+                      "currency": "PEN",
+                      "payment": {
+                        "method": "card"
+                      },
+                      "pdf_url": null,
+                      "created_at": "2026-10-22T16:43:12.363Z"
+                    }
+                  ],
+                  "has_more": false
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Ventas"
+        ],
+        "summary": "Registrar una venta",
+        "operationId": "createSale",
+        "description": "Emite boleta, factura o nota de venta igual que tu POS: correlativo, IGV, kardex, caja y SUNAT. Antes de emitir revisa producto, tallas, stock libre, lote y cliente; si algo falta no se emite nada. La respuesta llega enseguida con status pending y SUNAT se consulta con GET /sales/{id}. Con sk_test_ no se emite (status: test, livemode: false, number_preview).",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaleCreate"
+              },
+              "example": {
+                "customer": {
+                  "document_type": "dni",
+                  "document_number": "12345678",
+                  "name": "Ana Pérez"
+                },
+                "items": [
+                  {
+                    "product_id": 8507,
+                    "quantity": 2
+                  },
+                  {
+                    "description": "Envío a domicilio",
+                    "quantity": 1,
+                    "unit_price": 10
+                  }
+                ],
+                "payment": {
+                  "method": "card",
+                  "reference": "MP-998877"
+                },
+                "external_id": "WEB-1001"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Venta registrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sale"
+                },
+                "example": {
+                  "object": "sale",
+                  "livemode": true,
+                  "id": "sale_HKA2DiFel0Cz",
+                  "external_id": "WEB-1001",
+                  "document_type": "receipt",
+                  "number": "B001-1250",
+                  "status": "pending",
+                  "sunat_message": null,
+                  "issued_at": "2026-10-22T16:43:12.311Z",
+                  "location_id": 19,
+                  "customer": {
+                    "document_type": "dni",
+                    "document_number": "12345678",
+                    "name": "Ana Pérez"
+                  },
+                  "items": [
+                    {
+                      "product_id": 8507,
+                      "sku": "MOD-001-NEGR-M",
+                      "description": "Polo básico algodón premium - Negro / M",
+                      "quantity": 2,
+                      "unit_price": 49.9,
+                      "total": 99.8
+                    },
+                    {
+                      "product_id": null,
+                      "sku": null,
+                      "description": "Envío a domicilio",
+                      "quantity": 1,
+                      "unit_price": 10,
+                      "total": 10
+                    }
+                  ],
+                  "subtotal": 93.05,
+                  "igv": 16.75,
+                  "total": 109.8,
+                  "currency": "PEN",
+                  "payment": {
+                    "method": "card"
+                  },
+                  "pdf_url": null,
+                  "created_at": "2026-10-22T16:43:12.363Z"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          }
+        }
+      }
+    },
+    "/sales/{id}": {
+      "get": {
+        "tags": [
+          "Ventas"
+        ],
+        "summary": "Ver una venta",
+        "operationId": "getSale",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "sale_HKA2DiFel0Cz"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "La venta",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sale"
+                },
+                "example": {
+                  "object": "sale",
+                  "livemode": true,
+                  "id": "sale_HKA2DiFel0Cz",
+                  "external_id": "WEB-1001",
+                  "document_type": "receipt",
+                  "number": "B001-1250",
+                  "status": "accepted",
+                  "sunat_message": null,
+                  "issued_at": "2026-10-22T16:43:12.311Z",
+                  "location_id": 19,
+                  "customer": {
+                    "document_type": "dni",
+                    "document_number": "12345678",
+                    "name": "Ana Pérez"
+                  },
+                  "items": [
+                    {
+                      "product_id": 8507,
+                      "sku": "MOD-001-NEGR-M",
+                      "description": "Polo básico algodón premium - Negro / M",
+                      "quantity": 2,
+                      "unit_price": 49.9,
+                      "total": 99.8
+                    },
+                    {
+                      "product_id": null,
+                      "sku": null,
+                      "description": "Envío a domicilio",
+                      "quantity": 1,
+                      "unit_price": 10,
+                      "total": 10
+                    }
+                  ],
+                  "subtotal": 93.05,
+                  "igv": 16.75,
+                  "total": 109.8,
+                  "currency": "PEN",
+                  "payment": {
+                    "method": "card"
+                  },
+                  "pdf_url": null,
+                  "created_at": "2026-10-22T16:43:12.363Z"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          }
+        }
+      }
+    },
+    "/locations": {
+      "get": {
+        "tags": [
+          "Datos"
+        ],
+        "summary": "Sedes",
+        "operationId": "listLocations",
+        "responses": {
+          "200": {
+            "description": "Tus sedes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                },
+                "example": {
+                  "object": "list",
+                  "data": [
+                    {
+                      "object": "location",
+                      "id": 19,
+                      "name": "Sede Principal",
+                      "address": "Jr. Lima 123",
+                      "is_main": true
+                    }
+                  ],
+                  "has_more": false,
+                  "next_cursor": null
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      }
+    },
+    "/categories": {
+      "get": {
+        "tags": [
+          "Datos"
+        ],
+        "summary": "Categorías",
+        "operationId": "listCategories",
+        "responses": {
+          "200": {
+            "description": "Tus categorías",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      }
+    },
+    "/brands": {
+      "get": {
+        "tags": [
+          "Datos"
+        ],
+        "summary": "Marcas",
+        "operationId": "listBrands",
+        "responses": {
+          "200": {
+            "description": "Tus marcas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      }
+    },
+    "/units": {
+      "get": {
+        "tags": [
+          "Datos"
+        ],
+        "summary": "Unidades",
+        "operationId": "listUnits",
+        "description": "Códigos de unidad de SUNAT (NIU unidad, KGM kilo, LTR litro, ZZ servicio…).",
+        "responses": {
+          "200": {
+            "description": "Unidades",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "API Key",
+        "description": "Authorization: Bearer sk_live_… (real) o sk_test_… (prueba). Se crean en el panel de Krezka → API de Krezka."
+      }
+    },
+    "parameters": {
+      "IdempotencyKey": {
+        "name": "Idempotency-Key",
+        "in": "header",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "maxLength": 255
+        },
+        "description": "Un UUID por operación. Si reintentas con la misma, recibes la misma respuesta y no se repite la venta ni el ajuste."
+      }
+    },
+    "responses": {
+      "BadRequest": {
+        "description": "Error 400",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": {
+                "type": "invalid_request_error",
+                "code": "parameter_invalid",
+                "message": "items[0].quantity tiene que ser un número mayor que 0. Mándalo como número, sin comillas (31.5, no \"31.5\").",
+                "param": "items[0].quantity"
+              }
+            }
+          }
+        }
+      },
+      "Unauthorized": {
+        "description": "Error 401",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": {
+                "type": "invalid_request_error",
+                "code": "invalid_api_key",
+                "message": "API key inválida o revocada.",
+                "param": null
+              }
+            }
+          }
+        }
+      },
+      "Forbidden": {
+        "description": "Error 403",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": {
+                "type": "invalid_request_error",
+                "code": "api_not_in_plan",
+                "message": "El plan de este negocio no incluye la API de Krezka. Actívala desde tu panel o escríbenos.",
+                "param": null
+              }
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "Error 404",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": {
+                "type": "invalid_request_error",
+                "code": "product_not_found",
+                "message": "items[0]: no existe el producto 8507 en este negocio.",
+                "param": "items[0]"
+              }
+            }
+          }
+        }
+      },
+      "Conflict": {
+        "description": "Error 409",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": {
+                "type": "invalid_request_error",
+                "code": "insufficient_stock",
+                "message": "No hay stock suficiente en la sede: Polo básico - Negro / M (piden 3, hay 1). No se emitió nada.",
+                "param": "items"
+              }
+            }
+          }
+        }
+      },
+      "TooManyRequests": {
+        "description": "Error 429",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": {
+                "type": "invalid_request_error",
+                "code": "too_many_requests",
+                "message": "Superaste el límite de solicitudes. Reintenta en 12 segundos.",
+                "param": null
+              }
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string"
+              },
+              "code": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string",
+                "description": "Qué pasó y cómo arreglarlo, en español."
+              },
+              "param": {
+                "type": "string",
+                "nullable": true,
+                "description": "El campo con el problema."
+              }
+            }
+          }
+        }
+      },
+      "StockByLocation": {
+        "type": "object",
+        "properties": {
+          "location_id": {
+            "type": "integer"
+          },
+          "location": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "number"
+          },
+          "reserved": {
+            "type": "number"
+          },
+          "available": {
+            "type": "number"
+          }
+        }
+      },
+      "Variant": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Úsalo como product_id para vender o ajustar esta talla."
+          },
+          "sku": {
+            "type": "string"
+          },
+          "barcode": {
+            "type": "string",
+            "nullable": true
+          },
+          "attributes": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "price": {
+            "type": "number"
+          },
+          "image": {
+            "type": "string",
+            "nullable": true
+          },
+          "stock": {
+            "type": "number"
+          },
+          "reserved": {
+            "type": "number"
+          },
+          "available": {
+            "type": "number"
+          },
+          "stock_by_location": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StockByLocation"
+            }
+          }
+        }
+      },
+      "Product": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "type": "string",
+            "enum": [
+              "product"
+            ]
+          },
+          "id": {
+            "type": "integer",
+            "nullable": true
+          },
+          "livemode": {
+            "type": "boolean",
+            "description": "Solo en escrituras con sk_test_: false."
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "product",
+              "service"
+            ]
+          },
+          "sku": {
+            "type": "string"
+          },
+          "barcode": {
+            "type": "string",
+            "nullable": true
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "price": {
+            "type": "number",
+            "description": "Con IGV."
+          },
+          "sale_price": {
+            "type": "number",
+            "nullable": true,
+            "description": "Solo si la oferta está vigente hoy."
+          },
+          "sale_starts_on": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "sale_ends_on": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "PEN",
+              "USD"
+            ]
+          },
+          "tax_included": {
+            "type": "boolean"
+          },
+          "unit": {
+            "type": "string"
+          },
+          "category": {
+            "type": "object",
+            "nullable": true
+          },
+          "brand": {
+            "type": "object",
+            "nullable": true
+          },
+          "images": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "stock": {
+            "type": "number"
+          },
+          "reserved": {
+            "type": "number",
+            "description": "En pedidos pendientes o confirmados."
+          },
+          "available": {
+            "type": "number",
+            "description": "stock − reserved: úsalo para decidir si está agotado."
+          },
+          "stock_by_location": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StockByLocation"
+            }
+          },
+          "availability": {
+            "type": "string",
+            "enum": [
+              "in_stock",
+              "out_of_stock"
+            ]
+          },
+          "wholesale_prices": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "packs": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "pharmacy": {
+            "type": "object",
+            "nullable": true
+          },
+          "batches": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "published_in_store": {
+            "type": "boolean"
+          },
+          "variants": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Variant"
+            }
+          }
+        }
+      },
+      "ProductList": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "type": "string"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Product"
+            }
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "next_cursor": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "Batch": {
+        "type": "object",
+        "required": [
+          "number"
+        ],
+        "properties": {
+          "number": {
+            "type": "string"
+          },
+          "expires_on": {
+            "type": "string",
+            "format": "date",
+            "description": "Obligatorio si el lote es nuevo."
+          },
+          "cost": {
+            "type": "number"
+          }
+        }
+      },
+      "ProductCreate": {
+        "type": "object",
+        "required": [
+          "name",
+          "price"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 250
+          },
+          "price": {
+            "type": "number",
+            "description": "Con IGV."
+          },
+          "sku": {
+            "type": "string",
+            "description": "Si no viene, Krezka asigna uno."
+          },
+          "barcode": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "category_id": {
+            "type": "integer"
+          },
+          "brand_id": {
+            "type": "integer"
+          },
+          "unit": {
+            "type": "string",
+            "default": "NIU"
+          },
+          "tax": {
+            "type": "string",
+            "enum": [
+              "taxed",
+              "exempt",
+              "unaffected"
+            ],
+            "default": "taxed"
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "PEN",
+              "USD"
+            ],
+            "default": "PEN"
+          },
+          "sale_price": {
+            "type": "number"
+          },
+          "sale_starts_on": {
+            "type": "string",
+            "format": "date"
+          },
+          "sale_ends_on": {
+            "type": "string",
+            "format": "date"
+          },
+          "published_in_store": {
+            "type": "boolean"
+          },
+          "stock": {
+            "type": "number",
+            "default": 0
+          },
+          "location_id": {
+            "type": "integer"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "product",
+              "service"
+            ]
+          },
+          "images": {
+            "type": "array",
+            "maxItems": 3,
+            "items": {
+              "type": "string",
+              "format": "uri"
+            }
+          },
+          "cost": {
+            "type": "number"
+          },
+          "wholesale_prices": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "min_quantity": {
+                  "type": "number"
+                },
+                "price": {
+                  "type": "number"
+                }
+              }
+            }
+          },
+          "packs": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "barcode": {
+                  "type": "string"
+                },
+                "units": {
+                  "type": "integer"
+                },
+                "price": {
+                  "type": "number"
+                },
+                "name": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "pharmacy": {
+            "type": "object"
+          },
+          "batch": {
+            "$ref": "#/components/schemas/Batch"
+          },
+          "variant_options": {
+            "type": "array",
+            "maxItems": 3,
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "values": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "variants": {
+            "type": "array",
+            "maxItems": 200,
+            "items": {
+              "type": "object",
+              "properties": {
+                "attributes": {
+                  "type": "object"
+                },
+                "sku": {
+                  "type": "string"
+                },
+                "barcode": {
+                  "type": "string"
+                },
+                "price": {
+                  "type": "number"
+                },
+                "image": {
+                  "type": "string"
+                },
+                "stock": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        }
+      },
+      "ProductUpdate": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "price": {
+            "type": "number"
+          },
+          "sku": {
+            "type": "string"
+          },
+          "barcode": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "category_id": {
+            "type": "integer"
+          },
+          "brand_id": {
+            "type": "integer"
+          },
+          "sale_price": {
+            "type": "number",
+            "nullable": true
+          },
+          "sale_starts_on": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "sale_ends_on": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "published_in_store": {
+            "type": "boolean"
+          },
+          "images": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "wholesale_prices": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "packs": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "pharmacy": {
+            "type": "object"
+          }
+        }
+      },
+      "StockAdjustmentCreate": {
+        "type": "object",
+        "required": [
+          "reason"
+        ],
+        "properties": {
+          "change": {
+            "type": "number",
+            "description": "Cuánto suma (+) o resta (−)."
+          },
+          "quantity": {
+            "type": "number",
+            "description": "Cómo queda. No va con batch."
+          },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "stock_count",
+              "found",
+              "customer_return",
+              "damaged",
+              "expired",
+              "lost",
+              "internal_use",
+              "supplier_return",
+              "correction",
+              "other"
+            ]
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 300
+          },
+          "location_id": {
+            "type": "integer"
+          },
+          "batch": {
+            "$ref": "#/components/schemas/Batch"
+          }
+        }
+      },
+      "StockAdjustment": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "type": "string"
+          },
+          "livemode": {
+            "type": "boolean"
+          },
+          "product_id": {
+            "type": "integer"
+          },
+          "location_id": {
+            "type": "integer"
+          },
+          "batch": {
+            "type": "string"
+          },
+          "previous_quantity": {
+            "type": "number"
+          },
+          "quantity": {
+            "type": "number"
+          },
+          "change": {
+            "type": "number"
+          },
+          "reason": {
+            "type": "string"
+          }
+        }
+      },
+      "SaleItem": {
+        "type": "object",
+        "required": [
+          "quantity"
+        ],
+        "properties": {
+          "product_id": {
+            "type": "integer",
+            "description": "O sku, o barcode: uno solo. Con tallas, el id de la variante."
+          },
+          "sku": {
+            "type": "string"
+          },
+          "barcode": {
+            "type": "string",
+            "description": "El código de un paquete vende el paquete a su precio."
+          },
+          "description": {
+            "type": "string",
+            "description": "Ítem sin producto (por ejemplo el envío): description + unit_price."
+          },
+          "quantity": {
+            "type": "number"
+          },
+          "unit_price": {
+            "type": "number",
+            "description": "Con IGV. Sin él, el precio del catálogo con su oferta vigente."
+          },
+          "batch": {
+            "type": "string",
+            "description": "Farmacia: de qué lote sale. Sin él, del que vence primero."
+          }
+        }
+      },
+      "SaleCreate": {
+        "type": "object",
+        "required": [
+          "items",
+          "payment"
+        ],
+        "properties": {
+          "document_type": {
+            "type": "string",
+            "enum": [
+              "receipt",
+              "invoice",
+              "sales_note"
+            ],
+            "description": "Si no viene: con RUC, invoice; si no, receipt. sales_note no va a SUNAT."
+          },
+          "location_id": {
+            "type": "integer"
+          },
+          "customer": {
+            "type": "object",
+            "description": "Sin customer: CLIENTES VARIOS. Una boleta de más de S/ 700 exige DNI.",
+            "properties": {
+              "document_type": {
+                "type": "string",
+                "enum": [
+                  "dni",
+                  "ruc",
+                  "ce",
+                  "passport",
+                  "none"
+                ]
+              },
+              "document_number": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "email": {
+                "type": "string"
+              },
+              "address": {
+                "type": "string"
+              },
+              "phone": {
+                "type": "string"
+              }
+            }
+          },
+          "items": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 200,
+            "items": {
+              "$ref": "#/components/schemas/SaleItem"
+            }
+          },
+          "payment": {
+            "type": "object",
+            "required": [
+              "method"
+            ],
+            "properties": {
+              "method": {
+                "type": "string",
+                "enum": [
+                  "cash",
+                  "card",
+                  "yape",
+                  "plin",
+                  "transfer"
+                ]
+              },
+              "reference": {
+                "type": "string"
+              }
+            }
+          },
+          "notes": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "external_id": {
+            "type": "string",
+            "maxLength": 64,
+            "description": "Tu número de pedido. Único: si llega otra vez, 409 duplicate_external_id con el id de la venta."
+          }
+        }
+      },
+      "Sale": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "type": "string",
+            "enum": [
+              "sale"
+            ]
+          },
+          "livemode": {
+            "type": "boolean"
+          },
+          "id": {
+            "type": "string",
+            "nullable": true
+          },
+          "external_id": {
+            "type": "string",
+            "nullable": true
+          },
+          "document_type": {
+            "type": "string",
+            "enum": [
+              "receipt",
+              "invoice",
+              "sales_note"
+            ]
+          },
+          "number": {
+            "type": "string",
+            "nullable": true
+          },
+          "number_preview": {
+            "type": "string",
+            "description": "Solo en modo prueba: el número que tocaría."
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "sent",
+              "accepted",
+              "observed",
+              "rejected",
+              "reconciling",
+              "voided",
+              "registered",
+              "test"
+            ]
+          },
+          "sunat_message": {
+            "type": "string",
+            "nullable": true
+          },
+          "issued_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "location_id": {
+            "type": "integer"
+          },
+          "customer": {
+            "type": "object",
+            "nullable": true
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "subtotal": {
+            "type": "number"
+          },
+          "igv": {
+            "type": "number"
+          },
+          "total": {
+            "type": "number"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "payment": {
+            "type": "object"
+          },
+          "pdf_url": {
+            "type": "string",
+            "nullable": true
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "SaleList": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "type": "string"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Sale"
+            }
+          },
+          "has_more": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

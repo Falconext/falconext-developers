@@ -1,0 +1,43 @@
+---
+title: Sincronizar el stock
+description: Crea productos y ajusta el stock desde tu sistema, con todo en el kardex.
+group: Guías
+order: 23
+---
+
+## Crear un producto
+
+```json
+{ "name": "Polo básico", "price": 49.9, "sku": "POLO-001", "stock": 10, "published_in_store": true }
+```
+
+Con tallas, manda las opciones y cada combinación; el stock va en cada variante:
+
+```json
+{
+  "name": "Polo básico", "price": 49.9,
+  "variant_options": [{ "name": "Talla", "values": ["S", "M"] }],
+  "variants": [
+    { "attributes": { "Talla": "S" }, "stock": 3 },
+    { "attributes": { "Talla": "M" }, "stock": 5 }
+  ]
+}
+```
+
+Cada sku y código de barras es único en el negocio. Hasta 3 fotos por producto.
+
+## Ajustar el stock
+
+El stock no se cambia editando el producto: se ajusta con un motivo, y queda en el kardex.
+
+```json
+{ "change": -2, "reason": "damaged", "note": "Se rompieron en el almacén" }
+```
+
+`change` suma o resta; `quantity` deja el stock en un número. Motivos: `stock_count`,
+`found`, `customer_return`, `damaged`, `expired`, `lost`, `internal_use`,
+`supplier_return`, `correction`, `other`.
+
+- Con **tallas**, ajusta cada variante con su propio id.
+- En **farmacia, botica o droguería** el stock entra y sale con su lote:
+  `"batch": { "number": "L001", "expires_on": "2027-05-31" }`.

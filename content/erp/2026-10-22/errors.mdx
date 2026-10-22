@@ -1,0 +1,35 @@
+---
+title: Errores
+description: Formato de error y los códigos más comunes.
+group: Introducción
+order: 4
+---
+
+Todo error tiene el mismo formato. `message` explica qué pasó y cómo arreglarlo, y `param`
+dice qué campo lo causó.
+
+```json
+{
+  "error": {
+    "type": "invalid_request_error",
+    "code": "insufficient_stock",
+    "message": "No hay stock suficiente en la sede: Polo básico - Negro / M (piden 3, hay 1). No se emitió nada.",
+    "param": "items"
+  }
+}
+```
+
+| HTTP | `code` | Cuándo |
+| --- | --- | --- |
+| 400 | `parameter_invalid`, `parameter_missing`, `unknown_parameter`, `invalid_json` | Un campo falta o está mal. Los campos desconocidos traen una pista de dónde va. |
+| 400 | `product_has_variants` | Vendiste el modelo: manda el id de la talla. |
+| 400 | `customer_required` | Boleta de más de S/ 700 sin DNI. |
+| 400 | `batch_expired`, `batch_not_found` | El lote venció o no existe. |
+| 401 | `invalid_api_key` | Clave inválida o anulada. |
+| 403 | `api_not_in_plan` | El plan del negocio no incluye la API. |
+| 404 | `product_not_found`, `resource_missing` | No existe en este negocio. |
+| 409 | `insufficient_stock` | No alcanza el stock libre. **No se emitió nada.** |
+| 409 | `duplicate_external_id` | Ese pedido ya se registró; trae el id de la venta. |
+| 429 | `too_many_requests` | Respeta `Retry-After`. |
+
+Ningún error 4xx de una venta gasta un número de boleta: todo se revisa antes de emitir.

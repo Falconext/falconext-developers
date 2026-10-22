@@ -1,0 +1,37 @@
+---
+title: Autenticación
+description: Claves de prueba y reales, cómo enviarlas y cómo anularlas.
+group: Introducción
+order: 2
+---
+
+Cada solicitud lleva una **clave** del negocio. Las claves se crean y se anulan en el panel
+de Krezka: **API de Krezka → Tus claves**. Solo el administrador del negocio puede hacerlo.
+
+## Tipos de clave
+
+| Prefijo | Tipo | Qué hace |
+| --- | --- | --- |
+| `sk_test_…` | Prueba | Lee tus datos reales. Crear, editar, ajustar y vender se valida igual, pero **no se guarda** y nada va a SUNAT. |
+| `sk_live_…` | Real | Todo se guarda: las ventas se emiten a SUNAT y el stock se mueve. |
+
+## Cómo enviarla
+
+```http
+GET /api/v1/erp/products HTTP/1.1
+Host: api.krezka.com
+Authorization: Bearer sk_live_a1b2c3…
+```
+
+<Callout type="warning" title="La clave va en tu servidor, nunca en el navegador">
+Quien tenga tu clave puede leer tu catálogo y registrar ventas. No la pongas en el
+JavaScript de tu página: llama a la API desde tu backend. Si se filtra, anúlala en el panel
+y crea otra; deja de funcionar al instante.
+</Callout>
+
+## Idempotency-Key
+
+Los `POST` (crear producto, ajustar stock, registrar venta) exigen la cabecera
+`Idempotency-Key` con un valor único por operación, por ejemplo un UUID. Si tu servidor
+reintenta por un corte de red con la misma clave, recibe la misma respuesta y **no se
+duplica** la venta ni el ajuste.

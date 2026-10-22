@@ -1,0 +1,25 @@
+---
+title: Modo prueba (sandbox)
+description: Integra contra tu catálogo real sin crear, mover ni emitir nada.
+group: Introducción
+order: 3
+---
+
+Con una clave `sk_test_…` puedes construir y probar toda tu integración sobre tu negocio
+real sin riesgo.
+
+| Operación | Con `sk_test_…` |
+| --- | --- |
+| Leer productos, sedes, categorías, ventas | Datos **reales**. |
+| Crear un producto | Valida todo (sku repetido, lote, fotos…) y devuelve el producto **simulado**, con `id: null`. |
+| Editar un producto | Valida y devuelve el producto actual más `changes`, lo que habría cambiado. |
+| Ajustar stock | Calcula `previous_quantity` y `quantity` sin mover nada. |
+| Registrar una venta | Revisa producto, tallas, stock, lote y cliente; devuelve totales, IGV y `number_preview`. **No se emite.** |
+
+Toda respuesta simulada trae `livemode: false`. Los errores son los mismos que en real: si
+una venta de prueba dice `insufficient_stock`, la real también lo diría.
+
+<Callout type="note" title="Pruébala sin escribir código">
+En el panel, **API de Krezka → Pruébala aquí** tiene un probador con todas las rutas y te da
+el mismo llamado en curl, JavaScript y PHP.
+</Callout>

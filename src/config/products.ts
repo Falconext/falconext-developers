@@ -64,14 +64,26 @@ export const products: Product[] = [
   },
   {
     id: "erp",
-    name: "Falconext ERP",
+    name: "API de Krezka (ERP)",
     shortName: "ERP",
-    tagline: "Sincroniza inventario, ventas y comprobantes",
-    description: "Productos, stock, órdenes y clientes del ERP Falconext MyPE.",
+    tagline: "Tu catálogo, tu stock y tus ventas en tu web",
+    description:
+      "Muestra tus productos con precio, ofertas, tallas y stock disponible; sincroniza el stock con tu sistema y registra cada venta de tu web con su boleta o factura, igual que en tu POS.",
     icon: "Boxes",
-    status: "planned",
+    status: "beta",
     accent: "#3B82F6",
-    versions: [],
+    defaultVersion: "2026-10-22",
+    versions: [
+      {
+        id: "2026-10-22",
+        label: "2026-10-22",
+        status: "beta",
+        releasedAt: "2026-10-22",
+        specPath: "/openapi/erp/2026-10-22.json",
+        notice:
+          "Beta: las claves se crean en el panel de Krezka (API de Krezka). Con una clave sk_test_ las escrituras se validan pero no se guardan.",
+      },
+    ],
   },
   {
     id: "facturacion",

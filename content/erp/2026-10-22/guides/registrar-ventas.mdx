@@ -1,0 +1,63 @@
+---
+title: Registrar ventas
+description: Cada venta de tu web con su boleta o factura, igual que en tu POS.
+group: Guías
+order: 22
+---
+
+`POST /sales` registra la venta y la emite por el mismo camino de tu POS: mismo correlativo,
+mismo IGV, baja el stock, queda en el kardex y el pago entra a caja.
+
+```json
+{
+  "customer": { "document_type": "dni", "document_number": "12345678", "name": "Ana Pérez" },
+  "items": [
+    { "product_id": 8507, "quantity": 2 },
+    { "description": "Envío a domicilio", "quantity": 1, "unit_price": 10 }
+  ],
+  "payment": { "method": "card", "reference": "MP-998877" },
+  "external_id": "WEB-1001"
+}
+```
+
+## Qué se emite
+
+| Cliente | Sin `document_type` | Con `document_type` |
+| --- | --- | --- |
+| Con RUC | Factura | `invoice` |
+| Con DNI, CE o pasaporte | Boleta | `receipt` |
+| Sin `customer` | Boleta a CLIENTES VARIOS | `receipt` |
+| Cualquiera | — | `sales_note`: nota de venta, **no va a SUNAT** |
+
+Una **boleta de más de S/ 700** tiene que identificar al comprador con su DNI (lo exige SUNAT).
+
+## Los ítems
+
+- Identifica cada producto con **uno** de: `product_id`, `sku` o `barcode`. Con tallas, usa el id de la variante.
+- El código de barras de un **paquete** (six pack, caja x12) vende el paquete a su precio.
+- Sin `unit_price` se cobra el precio del catálogo con su oferta vigente. Si lo mandas, va **con IGV**.
+- El **envío** u otro cobro sin producto: `description` + `quantity` + `unit_price`.
+- **Farmacia**: sin `batch` sale del lote vigente que vence primero; un lote vencido no se vende.
+
+## Antes de emitir
+
+Krezka revisa todo y, si algo falla, **no emite nada** ni gasta número: producto activo,
+talla elegida, **stock libre** en la sede (sin lo reservado, sumando las líneas del mismo
+producto), lote y cliente.
+
+## Después
+
+La respuesta llega enseguida con `status: pending`. SUNAT suele contestar en segundos:
+
+```bash
+curl https://api.krezka.com/api/v1/erp/sales/sale_HKA2DiFel0Cz \
+  -H "Authorization: Bearer sk_live_…"
+```
+
+`status` pasa a `accepted`. Si queda en `pending` con `sunat_message`, Krezka reintenta solo.
+
+<Callout type="warning" title="Un pedido, una venta">
+Manda siempre tu número de pedido en `external_id`. Si tu web lo manda dos veces —un
+doble clic, un reintento—, la segunda recibe `409 duplicate_external_id` con el id de la
+venta ya hecha, en vez de emitir otra boleta.
+</Callout>
