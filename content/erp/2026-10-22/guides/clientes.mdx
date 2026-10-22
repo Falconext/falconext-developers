@@ -1,0 +1,29 @@
+---
+title: Clientes, categorías y marcas
+description: Ten tu cartera y tus categorías al día desde tu sistema.
+group: Guías
+order: 25
+---
+
+## Clientes
+
+```json
+{ "document_type": "ruc", "document_number": "20123456789", "name": "Empresa Cliente SAC", "email": "compras@cliente.pe", "phone": "987654321" }
+```
+
+- `document_type`: `dni`, `ruc`, `ce` o `passport`. El número se valida como en el panel.
+- **No se duplica:** si ya existe ese documento, `409 duplicate_customer` con su `id`.
+- `GET /customers?document_number=…` busca uno exacto; `search` busca por nombre, documento, correo o celular.
+- `PATCH /customers/{id}` cambia nombre, correo, celular o dirección (`null` borra el dato). El documento no se cambia.
+- No hace falta crear el cliente antes de vender: `POST /sales` con `customer` lo busca o lo crea solo.
+
+## Categorías y marcas
+
+```bash
+curl -X POST https://api.krezka.com/api/v1/erp/categories \
+  -H "Authorization: Bearer sk_live_…" -H "Content-Type: application/json" \
+  -H "Idempotency-Key: $(uuidgen)" -d '{ "name": "Bebidas" }'
+```
+
+Si ya existe una con ese nombre (sin importar mayúsculas) responde `409 duplicate_name`
+con su `id`: úsalo en `category_id` / `brand_id` al crear productos.

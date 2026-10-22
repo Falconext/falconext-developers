@@ -30,6 +30,14 @@
       "description": "Boletas, facturas y notas de venta por el mismo camino de tu POS."
     },
     {
+      "name": "Clientes",
+      "description": "Tu cartera de clientes: buscar, crear y editar."
+    },
+    {
+      "name": "Webhooks",
+      "description": "Avisos firmados cuando SUNAT acepta, observa o rechaza una venta, o cuando se anula."
+    },
+    {
       "name": "Datos",
       "description": "Sedes, categorías, marcas y unidades para armar tus llamadas."
     }
@@ -971,6 +979,644 @@
         }
       }
     },
+    "/sales/{id}/void": {
+      "post": {
+        "tags": [
+          "Ventas"
+        ],
+        "summary": "Anular una venta",
+        "operationId": "voidSale",
+        "description": "Nota de venta: se anula directo. Boleta o factura aceptada por SUNAT: se emite su nota de crédito (motivo 01, anulación de la operación) y se envía a SUNAT. En ambos casos se devuelve el stock y se quita el cobro. Si todavía está en camino a SUNAT, espera a accepted; si SUNAT la rechazó, no hay nada que anular. Con sk_test_ se simula.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "reason"
+                ],
+                "properties": {
+                  "reason": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "description": "El motivo; SUNAT lo exige."
+                  }
+                }
+              },
+              "example": {
+                "reason": "El cliente devolvió el pedido"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "La venta anulada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sale"
+                },
+                "example": {
+                  "object": "sale",
+                  "livemode": true,
+                  "id": "sale_HKA2DiFel0Cz",
+                  "external_id": "WEB-1001",
+                  "document_type": "receipt",
+                  "number": "B001-1250",
+                  "status": "voided",
+                  "sunat_message": null,
+                  "issued_at": "2026-10-22T16:43:12.311Z",
+                  "location_id": 19,
+                  "customer": {
+                    "document_type": "dni",
+                    "document_number": "12345678",
+                    "name": "Ana Pérez"
+                  },
+                  "items": [
+                    {
+                      "product_id": 8507,
+                      "sku": "MOD-001-NEGR-M",
+                      "description": "Polo básico algodón premium - Negro / M",
+                      "quantity": 2,
+                      "unit_price": 49.9,
+                      "total": 99.8
+                    },
+                    {
+                      "product_id": null,
+                      "sku": null,
+                      "description": "Envío a domicilio",
+                      "quantity": 1,
+                      "unit_price": 10,
+                      "total": 10
+                    }
+                  ],
+                  "subtotal": 93.05,
+                  "igv": 16.75,
+                  "total": 109.8,
+                  "currency": "PEN",
+                  "payment": {
+                    "method": "card"
+                  },
+                  "pdf_url": null,
+                  "created_at": "2026-10-22T16:43:12.363Z",
+                  "credit_note": {
+                    "number": "BC01-15",
+                    "status": "pending",
+                    "reason": "El cliente devolvió el pedido",
+                    "sunat_message": null
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          }
+        }
+      }
+    },
+    "/sales/{id}/pdf": {
+      "get": {
+        "tags": [
+          "Ventas"
+        ],
+        "summary": "PDF de una venta",
+        "operationId": "getSalePdf",
+        "description": "El enlace al PDF, el mismo que imprime tu panel. El A4 queda guardado; ticket y A5 se generan al pedirlos. Para boletas y facturas, espera a status accepted antes de enviárselo al cliente.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "a4",
+                "ticket",
+                "a5"
+              ],
+              "default": "a4"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "El PDF",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "object": {
+                      "type": "string"
+                    },
+                    "sale_id": {
+                      "type": "string"
+                    },
+                    "format": {
+                      "type": "string"
+                    },
+                    "url": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "example": {
+                  "object": "pdf",
+                  "sale_id": "sale_HKA2DiFel0Cz",
+                  "format": "a4",
+                  "url": "https://…/B001-1250.pdf",
+                  "status": "accepted"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/customers": {
+      "get": {
+        "tags": [
+          "Clientes"
+        ],
+        "summary": "Listar clientes",
+        "operationId": "listCustomers",
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Nombre, documento, correo o celular."
+          },
+          {
+            "name": "document_number",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Una página de clientes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "object": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Customer"
+                      }
+                    },
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "next_cursor": {
+                      "type": "string",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Clientes"
+        ],
+        "summary": "Crear un cliente",
+        "operationId": "createCustomer",
+        "description": "Se valida el documento como en el panel y nunca se duplica: si ya existe, 409 duplicate_customer con su id. Un proveedor con ese documento pasa a ser también cliente.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomerCreate"
+              },
+              "example": {
+                "document_type": "ruc",
+                "document_number": "20123456789",
+                "name": "Empresa Cliente SAC",
+                "email": "compras@cliente.pe",
+                "phone": "987654321",
+                "address": "Av. Lima 123"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Cliente creado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Customer"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/customers/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "get": {
+        "tags": [
+          "Clientes"
+        ],
+        "summary": "Ver un cliente",
+        "operationId": "getCustomer",
+        "responses": {
+          "200": {
+            "description": "El cliente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Customer"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Clientes"
+        ],
+        "summary": "Editar un cliente",
+        "operationId": "updateCustomer",
+        "description": "Nombre y datos de contacto; null borra el dato. El documento no se cambia.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "email": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "phone": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "address": {
+                    "type": "string",
+                    "nullable": true
+                  }
+                }
+              },
+              "example": {
+                "email": "nuevo@cliente.pe"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Cliente actualizado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Customer"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/webhook_endpoints": {
+      "get": {
+        "tags": [
+          "Webhooks"
+        ],
+        "summary": "Listar webhooks",
+        "operationId": "listWebhookEndpoints",
+        "responses": {
+          "200": {
+            "description": "Tus endpoints (sin el secret)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Webhooks"
+        ],
+        "summary": "Registrar un webhook",
+        "operationId": "createWebhookEndpoint",
+        "description": "Tu servidor recibe un POST firmado por cada cambio. El secret (whsec_…) se muestra una sola vez: guárdalo para verificar la firma. Hasta 5 por negocio.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "url"
+                ],
+                "properties": {
+                  "url": {
+                    "type": "string",
+                    "format": "uri",
+                    "description": "https"
+                  },
+                  "events": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "sale.accepted",
+                        "sale.observed",
+                        "sale.rejected",
+                        "sale.voided"
+                      ]
+                    },
+                    "description": "Vacía = todos."
+                  }
+                }
+              },
+              "example": {
+                "url": "https://tu-web.pe/krezka/avisos",
+                "events": [
+                  "sale.accepted",
+                  "sale.rejected",
+                  "sale.voided"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Webhook registrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                },
+                "example": {
+                  "object": "webhook_endpoint",
+                  "id": "we_3f9a…",
+                  "url": "https://tu-web.pe/krezka/avisos",
+                  "secret": "whsec_…",
+                  "events": [
+                    "sale.accepted",
+                    "sale.rejected",
+                    "sale.voided"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      }
+    },
+    "/webhook_endpoints/{id}": {
+      "delete": {
+        "tags": [
+          "Webhooks"
+        ],
+        "summary": "Borrar un webhook",
+        "operationId": "deleteWebhookEndpoint",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Borrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/webhook_endpoints/{id}/test": {
+      "post": {
+        "tags": [
+          "Webhooks"
+        ],
+        "summary": "Probar un webhook",
+        "operationId": "testWebhookEndpoint",
+        "description": "Manda un sale.accepted de ejemplo, firmado igual que los reales.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Resultado de la entrega",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                },
+                "example": {
+                  "object": "webhook_test",
+                  "endpoint_id": "we_3f9a…",
+                  "delivered": true,
+                  "message": "Tu servidor respondió 2xx."
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
     "/locations": {
       "get": {
         "tags": [
@@ -1037,6 +1683,70 @@
             "$ref": "#/components/responses/Forbidden"
           }
         }
+      },
+      "post": {
+        "tags": [
+          "Datos"
+        ],
+        "summary": "Crear categoría",
+        "operationId": "createCategory",
+        "description": "Si ya existe con ese nombre (sin importar mayúsculas), 409 duplicate_name con su id.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "maxLength": 100
+                  }
+                }
+              },
+              "example": {
+                "name": "Bebidas"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Categoría creada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                },
+                "example": {
+                  "object": "category",
+                  "id": 361,
+                  "name": "Bebidas"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
       }
     },
     "/brands": {
@@ -1062,6 +1772,70 @@
           },
           "403": {
             "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Datos"
+        ],
+        "summary": "Crear marca",
+        "operationId": "createBrand",
+        "description": "Si ya existe con ese nombre, 409 duplicate_name con su id.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "maxLength": 100
+                  }
+                }
+              },
+              "example": {
+                "name": "Inca Kola"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Marca creada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                },
+                "example": {
+                  "object": "brand",
+                  "id": 433,
+                  "name": "Inca Kola"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
           }
         }
       }
@@ -2026,9 +2800,106 @@
             "type": "string",
             "nullable": true
           },
+          "credit_note": {
+            "type": "object",
+            "nullable": true,
+            "description": "La nota de crédito que la anuló.",
+            "properties": {
+              "number": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string"
+              },
+              "reason": {
+                "type": "string"
+              },
+              "sunat_message": {
+                "type": "string",
+                "nullable": true
+              }
+            }
+          },
           "created_at": {
             "type": "string",
             "format": "date-time"
+          }
+        }
+      },
+      "Customer": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "type": "string",
+            "enum": [
+              "customer"
+            ]
+          },
+          "id": {
+            "type": "integer",
+            "nullable": true
+          },
+          "document_type": {
+            "type": "string",
+            "enum": [
+              "dni",
+              "ruc",
+              "ce",
+              "passport",
+              "none"
+            ]
+          },
+          "document_number": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "phone": {
+            "type": "string",
+            "nullable": true
+          },
+          "address": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "CustomerCreate": {
+        "type": "object",
+        "required": [
+          "document_type",
+          "document_number",
+          "name"
+        ],
+        "properties": {
+          "document_type": {
+            "type": "string",
+            "enum": [
+              "dni",
+              "ruc",
+              "ce",
+              "passport"
+            ]
+          },
+          "document_number": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
           }
         }
       },

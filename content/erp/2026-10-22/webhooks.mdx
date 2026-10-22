@@ -1,0 +1,63 @@
+---
+title: Webhooks
+description: Entérate solo cuando SUNAT acepta, rechaza o se anula una venta.
+group: API
+order: 10
+---
+
+En vez de preguntar una y otra vez con `GET /sales/{id}`, registra una dirección de tu
+servidor y Krezka te avisa cada cambio con un `POST` firmado.
+
+## Eventos
+
+| Evento | Cuándo |
+| --- | --- |
+| `sale.accepted` | SUNAT aceptó la boleta o factura. Ya puedes enviarle el PDF al cliente. |
+| `sale.observed` | SUNAT la aceptó con observaciones. |
+| `sale.rejected` | SUNAT la rechazó. `sunat_message` dice por qué. |
+| `sale.voided` | Se anuló (con su `credit_note` si era boleta o factura). |
+
+Cada evento trae la venta completa en `data`, igual que `GET /sales/{id}`.
+
+## Registrar tu dirección
+
+```bash
+curl -X POST https://api.krezka.com/api/v1/erp/webhook_endpoints \
+  -H "Authorization: Bearer sk_live_…" \
+  -H "Content-Type: application/json" \
+  -d '{ "url": "https://tu-web.pe/krezka/avisos", "events": ["sale.accepted", "sale.rejected", "sale.voided"] }'
+```
+
+La respuesta trae el `secret` (`whsec_…`) **una sola vez**: guárdalo, lo necesitas para
+verificar la firma. `events` vacío = todos. Hasta 5 direcciones por negocio.
+
+<Callout type="note" title="Pruébalo sin vender">
+`POST /webhook_endpoints/{id}/test` manda un `sale.accepted` de ejemplo, firmado igual
+que los reales, y te dice si tu servidor respondió.
+</Callout>
+
+## Verificar la firma
+
+Cada aviso trae `Falconext-Signature: t=1792…,v1=3f9a…`. Calcula el HMAC-SHA256 de
+`t + "." + cuerpo` con tu `secret` y compáralo con `v1`:
+
+```js
+import crypto from 'node:crypto';
+
+app.post('/krezka/avisos', express.raw({ type: 'application/json' }), (req, res) => {
+  const [, t, v1] = req.get('Falconext-Signature').match(/t=(\d+),v1=([a-f0-9]+)/);
+  const esperado = crypto.createHmac('sha256', process.env.KREZKA_WHSEC)
+    .update(`${t}.${req.body}`).digest('hex');
+  if (esperado !== v1) return res.sendStatus(401);
+  const evento = JSON.parse(req.body);
+  // evento.type === 'sale.accepted' → evento.data es la venta
+  res.sendStatus(200);
+});
+```
+
+## Entregas y reintentos
+
+- Responde **2xx en menos de 5 segundos**; procesa después si tarda.
+- Si no responde, se reintenta (3 veces seguidas y luego en los siguientes barridos, cada 30 s, hasta 20 veces).
+- Un mismo evento puede llegar más de una vez: usa `id` del evento para no procesarlo dos veces.
+- `Falconext-Attempt` dice qué intento es.

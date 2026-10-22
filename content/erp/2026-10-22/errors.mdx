@@ -30,6 +30,9 @@ dice qué campo lo causó.
 | 404 | `product_not_found`, `resource_missing` | No existe en este negocio. |
 | 409 | `insufficient_stock` | No alcanza el stock libre. **No se emitió nada.** |
 | 409 | `duplicate_external_id` | Ese pedido ya se registró; trae el id de la venta. |
+| 409 | `duplicate_customer`, `duplicate_name` | El cliente, la categoría o la marca ya existe; trae su `id`. |
+| 409 | `invalid_state`, `already_voided` | La venta no se puede anular en su estado actual, o ya está anulada. |
+| 400 | `pdf_failed` | No se pudo generar el PDF; reintenta en unos segundos. |
 | 429 | `too_many_requests` | Respeta `Retry-After`. |
 
 Ningún error 4xx de una venta gasta un número de boleta: todo se revisa antes de emitir.
