@@ -36,6 +36,20 @@ const nextConfig: NextConfig = {
       "/docs/guias/shopify": `${V}/guides/shopify`,
       "/docs/guias/woocommerce": `${V}/guides/woocommerce`,
     };
+    // developers.krezka.com solo documenta la API de Krezka: las páginas
+    // generales de /docs (SDKs, Postman, integraciones de Logística…) llevan a
+    // sus primeros pasos. El sandbox y la referencia sí son de cada marca.
+    if (process.env.NEXT_PUBLIC_BRAND === "krezka") {
+      return [
+        { source: "/docs", destination: "/erp/2026-10-22/getting-started", permanent: false },
+        {
+          source: "/docs/:pagina((?!sandbox|api-reference).*)",
+          destination: "/erp/2026-10-22/getting-started",
+          permanent: false,
+        },
+        { source: "/console/:path*", destination: "https://app.krezka.com/administrador/api-krezka", permanent: false },
+      ];
+    }
     return Object.entries(map).map(([source, destination]) => ({
       source,
       destination,

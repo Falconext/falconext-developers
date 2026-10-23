@@ -1,10 +1,15 @@
 import { cn } from "@/lib/utils";
+import { esKrezka } from "@/config/brand";
 
 /**
  * Marca Falconext Developers. El glifo es un nodo de entrega: un punto de origen
  * violeta enlazado a un destino ámbar por una arista — el ADN logístico del portal.
  */
 export function LogoMark({ className }: { className?: string }) {
+  if (esKrezka) {
+    // eslint-disable-next-line @next/next/no-img-element
+    return <img src="/brand/krezka-mark.png" alt="" aria-hidden="true" className={cn("h-7 w-auto", className)} />;
+  }
   return (
     <svg
       viewBox="0 0 32 32"
@@ -32,7 +37,7 @@ export function Logo({ className, withWordmark = true }: { className?: string; w
       <LogoMark />
       {withWordmark && (
         <span className="flex items-baseline gap-1.5 font-display text-[0.95rem] font-semibold tracking-tight">
-          Falconext
+          {esKrezka ? "Krezka" : "Falconext"}
           <span className="rounded bg-violet-500/12 px-1.5 py-0.5 font-mono text-[0.62rem] font-medium uppercase tracking-widest text-violet-400">
             dev
           </span>

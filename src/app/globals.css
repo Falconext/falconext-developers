@@ -159,6 +159,12 @@
     background-clip: text;
     color: transparent;
   }
+  /* Krezka: violeta a azul, los colores de su logo (Falconext usa ámbar). */
+  [data-brand="krezka"] .text-gradient {
+    background: linear-gradient(100deg, var(--fg) 0%, var(--fg) 40%, #7c3aed 72%, #2563eb 105%);
+    -webkit-background-clip: text;
+    background-clip: text;
+  }
 
   /* Malla/grid de fondo tipo blueprint logístico */
   .bg-grid {
