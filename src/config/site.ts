@@ -1,4 +1,6 @@
-export const siteConfig = {
+import { MARCA } from "./brand";
+
+const falconext = {
   name: "Falconext Developers",
   shortName: "Falconext",
   domain: "developers.falconext.com",
@@ -26,6 +28,32 @@ export const siteConfig = {
     // Este apunta al producto GA por conveniencia (descargas genéricas).
     openapi: "/openapi/logistica/2025-07-01.json",
   },
-} as const;
+};
+
+/** Krezka: la API para el propio negocio (catálogo, stock, ventas y facturación). */
+const krezka: typeof falconext = {
+  name: "Krezka Developers",
+  shortName: "Krezka",
+  domain: "developers.krezka.com",
+  url: "https://developers.krezka.com",
+  description:
+    "Conecta tu página web o tu sistema con Krezka: tu catálogo, tu stock y tus ventas con boleta o factura electrónica ante SUNAT. API REST, webhooks y modo prueba.",
+  tagline: "La API de Krezka para tu negocio",
+  product: { id: "erp", name: "API de Krezka" },
+  apiBaseUrl: "https://api.krezka.com",
+  currentApiVersion: "2026-10-22",
+  links: {
+    // Las claves se crean en el panel de Krezka, no en este portal.
+    dashboard: "https://app.krezka.com/administrador/api-krezka",
+    status: "https://krezka.com",
+    support: "mailto:ventas@krezka.com",
+    website: "https://krezka.com",
+    github: "",
+    postman: "",
+    openapi: "/openapi/erp/2026-10-22.json",
+  },
+};
+
+export const siteConfig = MARCA === "krezka" ? krezka : falconext;
 
 export type SiteConfig = typeof siteConfig;

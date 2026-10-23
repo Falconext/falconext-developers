@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { siteConfig } from "@/config/site";
 import { FlaskConical } from "lucide-react";
 import { Playground } from "@/components/api/playground";
 import { Callout } from "@/components/ui/callout";
@@ -12,7 +13,7 @@ export const metadata: Metadata = {
 
 export default async function SandboxPage() {
   // TODO(multi-producto): hacer el sandbox consciente de producto/versión vía ruta.
-  const resolved = resolveProductVersion("logistica", "latest");
+  const resolved = resolveProductVersion(siteConfig.product.id, "latest");
   const data = await getPlaygroundData(resolved!.version.specPath);
 
   return (
