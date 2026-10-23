@@ -39,6 +39,27 @@ Una **boleta de más de S/ 700** tiene que identificar al comprador con su DNI (
 - El **envío** u otro cobro sin producto: `description` + `quantity` + `unit_price`.
 - **Farmacia**: sin `batch` sale del lote vigente que vence primero; un lote vencido no se vende.
 
+## Solo facturación (tu web tiene su propio catálogo)
+
+Si tu plataforma ya maneja sus productos y su stock y solo quieres emitir la boleta o
+factura, manda cada línea como ítem libre, sin cargar nada en Krezka:
+
+```json
+{
+  "items": [
+    { "description": "Polera algodón talla M", "quantity": 2, "unit_price": 59 },
+    { "description": "Libro de cuentos", "quantity": 1, "unit_price": 40, "tax": "exempt" },
+    { "description": "Envío a domicilio", "quantity": 1, "unit_price": 12, "unit": "ZZ" }
+  ],
+  "payment": { "method": "card", "reference": "PAGO-8891" },
+  "external_id": "PEDIDO-1001"
+}
+```
+
+- `unit_price` va con IGV. `tax`: `taxed` (gravado), `exempt` (exonerado) o `unaffected` (inafecto); sin él, el de tu negocio (exonerado si estás en la Ley de Amazonía).
+- `unit`: unidad de SUNAT, `NIU` por defecto; `ZZ` para servicios.
+- No se mueve stock en Krezka; el cobro sí queda en tu caja.
+
 ## Antes de emitir
 
 Krezka revisa todo y, si algo falla, **no emite nada** ni gasta número: producto activo,

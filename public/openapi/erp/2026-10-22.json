@@ -2612,11 +2612,24 @@
           },
           "unit_price": {
             "type": "number",
-            "description": "Con IGV. Sin él, el precio del catálogo con su oferta vigente."
+            "description": "Con IGV. Sin él, el precio del catálogo con su oferta vigente. Obligatorio en ítems libres."
           },
           "batch": {
             "type": "string",
             "description": "Farmacia: de qué lote sale. Sin él, del que vence primero."
+          },
+          "tax": {
+            "type": "string",
+            "enum": [
+              "taxed",
+              "exempt",
+              "unaffected"
+            ],
+            "description": "Solo ítems libres. Sin él, el de tu negocio (exonerado si estás en la Ley de Amazonía; si no, gravado)."
+          },
+          "unit": {
+            "type": "string",
+            "description": "Solo ítems libres: código de unidad de SUNAT (NIU por defecto, ZZ para servicios). Ver GET /units."
           }
         }
       },
