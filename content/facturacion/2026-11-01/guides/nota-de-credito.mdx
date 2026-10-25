@@ -11,8 +11,8 @@ de anular uno emitido hace más de 7 días, y la forma correcta de devolver o de
 ## Anulación total
 
 ```bash
-curl -X POST https://api.falconext.pe/api/v1/invoicing/credit_notes \
-  -H "Authorization: Bearer $FALCONEXT_API_KEY" \
+curl -X POST https://api.krezka.com/api/v1/invoicing/credit_notes \
+  -H "Authorization: Bearer $KREZKA_API_KEY" \
   -H "Idempotency-Key: $(uuidgen)" \
   -H "Content-Type: application/json" \
   -d '{

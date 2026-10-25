@@ -44,7 +44,7 @@ const krezka: typeof falconext = {
   currentApiVersion: "2026-10-22",
   links: {
     // Las claves se crean en el panel de Krezka, no en este portal.
-    dashboard: "https://app.krezka.com/administrador/api-krezka",
+    dashboard: "/console",
     status: "https://krezka.com",
     support: "mailto:ventas@krezka.com",
     website: "https://krezka.com",

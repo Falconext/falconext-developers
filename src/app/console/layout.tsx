@@ -1,7 +1,8 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { auth, signOut } from "@/auth";
-import { KeyRound, Webhook, LogOut, ArrowLeft } from "lucide-react";
+import { KeyRound, Webhook, LogOut, ArrowLeft, Building2, Gauge } from "lucide-react";
+import { esKrezka } from "@/config/brand";
 
 export default async function ConsoleLayout({ children }: { children: ReactNode }) {
   const session = await auth();
@@ -21,12 +22,22 @@ export default async function ConsoleLayout({ children }: { children: ReactNode 
             Consola
           </p>
           <nav className="flex flex-col gap-1">
+            {esKrezka && session?.user && (
+              <ConsoleNavLink href="/console/empresas" icon={<Building2 className="h-4 w-4" />}>
+                Mis empresas
+              </ConsoleNavLink>
+            )}
             <ConsoleNavLink href="/console/api-keys" icon={<KeyRound className="h-4 w-4" />}>
-              API keys
+              {esKrezka ? "Claves" : "API keys"}
             </ConsoleNavLink>
             <ConsoleNavLink href="/console/webhooks" icon={<Webhook className="h-4 w-4" />}>
               Webhooks
             </ConsoleNavLink>
+            {esKrezka && session?.user && (
+              <ConsoleNavLink href="/console/consumo" icon={<Gauge className="h-4 w-4" />}>
+                Consumo y precios
+              </ConsoleNavLink>
+            )}
           </nav>
 
           {session?.user && (

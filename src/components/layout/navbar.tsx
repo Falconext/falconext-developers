@@ -22,11 +22,10 @@ const linksFalconext = [
 ];
 
 const linksKrezka = [
-  { label: "Primeros pasos", href: "/erp/2026-10-22/getting-started", match: "/erp/2026-10-22/getting-started" },
-  { label: "Guías", href: "/erp/2026-10-22/guides/registrar-ventas", match: "/erp/2026-10-22/guides" },
-  { label: "API Reference", href: "/erp/2026-10-22/reference", match: "/erp/2026-10-22/reference" },
-  { label: "Webhooks", href: "/erp/2026-10-22/webhooks", match: "/erp/2026-10-22/webhooks" },
-  { label: "Changelog", href: "/erp/2026-10-22/changelog", match: "/changelog" },
+  { label: "API de Krezka", href: "/erp/2026-10-22/getting-started", match: "/erp" },
+  { label: "API de Facturación", href: "/facturacion/2026-11-01/getting-started", match: "/facturacion/2026-11-01/getting-started" },
+  { label: "Precios", href: "/facturacion/2026-11-01/pricing", match: "/facturacion/2026-11-01/pricing" },
+  { label: "Referencia", href: "/facturacion/2026-11-01/reference", match: "/reference" },
 ];
 
 const primaryLinks = esKrezka ? linksKrezka : linksFalconext;
@@ -95,7 +94,7 @@ export function Navbar() {
           )}
           <ThemeToggle />
           <Button href={siteConfig.links.dashboard} size="sm" className="hidden sm:inline-flex">
-            {esKrezka ? "Mis claves" : "Comenzar"}
+            {esKrezka ? "Consola" : "Comenzar"}
           </Button>
           <button
             type="button"

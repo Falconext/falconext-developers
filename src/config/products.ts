@@ -92,13 +92,13 @@ const todos: Product[] = [
     ],
   },
   {
-    brand: "falconext",
+    brand: "krezka",
     id: "facturacion",
-    name: "Facturación Electrónica",
+    name: "API de Facturación",
     shortName: "Facturación",
     tagline: "Emite facturas y boletas SUNAT desde tu sistema",
     description:
-      "Facturas, boletas y notas de crédito válidas ante SUNAT. Falconext firma, envía, guarda el CDR y te avisa por webhook; tú no tocas XML ni certificados.",
+      "Facturas, boletas y notas de crédito válidas ante SUNAT desde tu sistema. Regístrate, agrega tus empresas por RUC y prueba gratis; Krezka firma, envía, guarda el CDR y te avisa por webhook.",
     icon: "ReceiptText",
     status: "beta",
     accent: "#10B981",
@@ -111,7 +111,7 @@ const todos: Product[] = [
         releasedAt: "2026-11-01",
         specPath: "/openapi/facturacion/2026-11-01.json",
         notice:
-          "Beta: el contrato está congelado y el backend se implementa contra él. Las API keys de producción se entregan a integradores piloto.",
+          "Regístrate en la consola, agrega tu empresa por RUC y prueba gratis con una clave sk_test_. Pagas por empresa y por mes solo lo que SUNAT acepta.",
       },
     ],
   },

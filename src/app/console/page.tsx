@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
+import { CONSOLA } from "@/config/consola";
 
 export default function ConsoleRoot() {
-  redirect("/console/api-keys");
+  redirect(CONSOLA.inicio);
 }
