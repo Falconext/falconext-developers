@@ -119,7 +119,8 @@ export default async function ConsumoPage({
       <section className="mt-10">
         <h2 className="mb-1 font-display text-xl font-semibold text-fg">Pagos</h2>
         <p className="mb-4 text-sm text-muted">
-          Cerramos cada mes el día 2 y tienes 15 días para pagarlo. Te avisamos por correo.
+          Cerramos cada mes el día 2 y tienes 15 días para pagarlo. Te avisamos por correo. Si vence sin pagarse, desde el día siguiente se
+          pausa la emisión hasta que pagues.
         </p>
         {retorno === "paid" && (
           <div className="mb-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-sm text-emerald-300">¡Listo! Recibimos tu pago.</div>
