@@ -6,6 +6,8 @@
  * el home se derivan de este archivo. Ningún componente se toca al escalar.
  */
 
+import { MARCA, type Marca } from "./brand";
+
 export type ProductStatus = "ga" | "beta" | "planned";
 export type VersionStatus = "stable" | "beta" | "deprecated";
 
@@ -23,6 +25,8 @@ export type ApiVersion = {
 };
 
 export type Product = {
+  /** En qué portal se publica (ver config/brand.ts). */
+  brand: Marca;
   /** Segmento de URL, p. ej. "logistica". */
   id: string;
   name: string;
@@ -40,8 +44,9 @@ export type Product = {
   defaultVersion?: string;
 };
 
-export const products: Product[] = [
+const todos: Product[] = [
   {
+    brand: "falconext",
     id: "logistica",
     name: "Falconext Logística",
     shortName: "Logística",
@@ -63,6 +68,7 @@ export const products: Product[] = [
     ],
   },
   {
+    brand: "krezka",
     id: "erp",
     name: "API de Krezka (ERP)",
     shortName: "ERP",
@@ -86,6 +92,7 @@ export const products: Product[] = [
     ],
   },
   {
+    brand: "falconext",
     id: "facturacion",
     name: "Facturación Electrónica",
     shortName: "Facturación",
@@ -109,6 +116,7 @@ export const products: Product[] = [
     ],
   },
   {
+    brand: "falconext",
     id: "ecommerce",
     name: "Falconext Ecommerce",
     shortName: "Ecommerce",
@@ -120,6 +128,7 @@ export const products: Product[] = [
     versions: [],
   },
   {
+    brand: "falconext",
     id: "crm",
     name: "Falconext CRM",
     shortName: "CRM",
@@ -131,6 +140,7 @@ export const products: Product[] = [
     versions: [],
   },
   {
+    brand: "falconext",
     id: "marketplace",
     name: "Falconext Marketplace",
     shortName: "Marketplace",
@@ -142,6 +152,9 @@ export const products: Product[] = [
     versions: [],
   },
 ];
+
+/** Los productos de la marca que se está publicando. */
+export const products: Product[] = todos.filter((p) => p.brand === MARCA);
 
 // ------------------------------------------------------------------ //
 // Helpers de acceso al registry.

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { esKrezka } from "@/config/brand";
 import { useRouter } from "next/navigation";
 import { Command } from "cmdk";
 import {
@@ -264,7 +265,7 @@ export function SearchDialog({
         <div className="flex items-center gap-4 border-t border-app px-4 py-2.5 text-[0.7rem] text-subtle">
           <span className="flex items-center gap-1.5"><Kbd>↑</Kbd><Kbd>↓</Kbd> navegar</span>
           <span className="flex items-center gap-1.5"><Kbd>↵</Kbd> abrir</span>
-          <span className="ml-auto font-mono">Falconext Search</span>
+          <span className="ml-auto font-mono">{esKrezka ? "Krezka" : "Falconext"} Search</span>
         </div>
       </Command>
     </div>

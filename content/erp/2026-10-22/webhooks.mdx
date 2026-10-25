@@ -38,14 +38,14 @@ que los reales, y te dice si tu servidor respondió.
 
 ## Verificar la firma
 
-Cada aviso trae `Falconext-Signature: t=1792…,v1=3f9a…`. Calcula el HMAC-SHA256 de
+Cada aviso trae `Krezka-Signature: t=1792…,v1=3f9a…`. Calcula el HMAC-SHA256 de
 `t + "." + cuerpo` con tu `secret` y compáralo con `v1`:
 
 ```js
 import crypto from 'node:crypto';
 
 app.post('/krezka/avisos', express.raw({ type: 'application/json' }), (req, res) => {
-  const [, t, v1] = req.get('Falconext-Signature').match(/t=(\d+),v1=([a-f0-9]+)/);
+  const [, t, v1] = req.get('Krezka-Signature').match(/t=(\d+),v1=([a-f0-9]+)/);
   const esperado = crypto.createHmac('sha256', process.env.KREZKA_WHSEC)
     .update(`${t}.${req.body}`).digest('hex');
   if (esperado !== v1) return res.sendStatus(401);
@@ -60,4 +60,4 @@ app.post('/krezka/avisos', express.raw({ type: 'application/json' }), (req, res)
 - Responde **2xx en menos de 5 segundos**; procesa después si tarda.
 - Si no responde, se reintenta (3 veces seguidas y luego en los siguientes barridos, cada 30 s, hasta 20 veces).
 - Un mismo evento puede llegar más de una vez: usa `id` del evento para no procesarlo dos veces.
-- `Falconext-Attempt` dice qué intento es.
+- `Krezka-Attempt` dice qué intento es.

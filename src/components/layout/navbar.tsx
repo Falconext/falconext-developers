@@ -10,15 +10,26 @@ import { SearchButton } from "@/components/search/search-button";
 import { Button } from "@/components/ui/button";
 import { MobileNav } from "./mobile-nav";
 import { siteConfig } from "@/config/site";
+import { esKrezka } from "@/config/brand";
 import { cn } from "@/lib/utils";
 
-const primaryLinks = [
+const linksFalconext = [
   { label: "Productos", href: "/#ecosistema", match: "/#ecosistema" },
   { label: "Documentación", href: "/logistica/2025-07-01/getting-started", match: "/logistica" },
   { label: "API Reference", href: "/logistica", match: "/logistica/2025-07-01/reference" },
   { label: "SDKs", href: "/docs/sdk", match: "/docs/sdk" },
   { label: "Changelog", href: "/logistica/2025-07-01/changelog", match: "/changelog" },
 ];
+
+const linksKrezka = [
+  { label: "Primeros pasos", href: "/erp/2026-10-22/getting-started", match: "/erp/2026-10-22/getting-started" },
+  { label: "Guías", href: "/erp/2026-10-22/guides/registrar-ventas", match: "/erp/2026-10-22/guides" },
+  { label: "API Reference", href: "/erp/2026-10-22/reference", match: "/erp/2026-10-22/reference" },
+  { label: "Webhooks", href: "/erp/2026-10-22/webhooks", match: "/erp/2026-10-22/webhooks" },
+  { label: "Changelog", href: "/erp/2026-10-22/changelog", match: "/changelog" },
+];
+
+const primaryLinks = esKrezka ? linksKrezka : linksFalconext;
 
 export function Navbar() {
   const pathname = usePathname();
@@ -42,7 +53,7 @@ export function Navbar() {
       )}
     >
       <div className="mx-auto flex h-16 max-w-[1400px] items-center gap-4 px-4 sm:px-6">
-        <Link href="/" aria-label="Falconext Developers — inicio" className="shrink-0">
+        <Link href="/" aria-label={`${siteConfig.name} — inicio`} className="shrink-0">
           <Logo />
         </Link>
 
@@ -71,6 +82,7 @@ export function Navbar() {
           <div className="md:hidden">
             <SearchButton compact />
           </div>
+          {siteConfig.links.github && (
           <Link
             href={siteConfig.links.github}
             target="_blank"
@@ -80,9 +92,10 @@ export function Navbar() {
           >
             <Github className="h-4 w-4" />
           </Link>
+          )}
           <ThemeToggle />
           <Button href={siteConfig.links.dashboard} size="sm" className="hidden sm:inline-flex">
-            Comenzar
+            {esKrezka ? "Mis claves" : "Comenzar"}
           </Button>
           <button
             type="button"
