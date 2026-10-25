@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useState, useTransition } from "react";
-import { Braces, FlaskConical, Plus, Trash2 } from "lucide-react";
+import { Braces, FlaskConical, Plus, Send, Trash2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { CopyButton } from "@/components/ui/copy-button";
 import { cn } from "@/lib/utils";
 import { probarComprobante, type ResultadoPrueba } from "./actions";
+import { emitirComprobante } from "../documentos/actions";
 
 type Item = { description: string; quantity: string; unit_value: string; tax_affectation: string };
 
@@ -128,7 +130,13 @@ function Codigo({ codigo, className }: { codigo: string; className?: string }) {
   );
 }
 
-export function Probador({ empresas, inicial }: { empresas: { id: string; nombre: string; ruc: string }[]; inicial: string }) {
+export function Probador({
+  empresas,
+  inicial,
+}: {
+  empresas: { id: string; nombre: string; ruc: string; status: string }[];
+  inicial: string;
+}) {
   const [issuer, setIssuer] = useState(inicial);
   const [tipo, setTipo] = useState("receipt");
   const [moneda, setMoneda] = useState("PEN");
@@ -138,11 +146,21 @@ export function Probador({ empresas, inicial }: { empresas: { id: string; nombre
   const [lenguaje, setLenguaje] = useState(0);
   const [resultado, setResultado] = useState<ResultadoPrueba | null>(null);
   const [pendiente, startTransition] = useTransition();
+  const [confirmando, setConfirmando] = useState(false);
+  // Idempotency-Key de la emisión: el mismo mientras el formulario no cambie,
+  // así un doble clic o un reintento no emite dos comprobantes.
+  const [clave, setClave] = useState(() => crypto.randomUUID());
+  const router = useRouter();
+  const enProduccion = empresas.find((e) => e.id === issuer)?.status === "active";
 
   const cuerpo = useMemo(() => armarCuerpo({ issuer, tipo, moneda, cliente, items }), [issuer, tipo, moneda, cliente, items]);
   const codigos = useMemo(() => fragmentos(cuerpo), [cuerpo]);
   // Un resultado viejo junto a un formulario ya cambiado confunde: se borra.
-  useEffect(() => setResultado(null), [cuerpo]);
+  useEffect(() => {
+    setResultado(null);
+    setConfirmando(false);
+    setClave(crypto.randomUUID());
+  }, [cuerpo]);
   const conError = (param: string) => resultado && !resultado.ok && resultado.param?.startsWith(param);
 
   const cambiarTipo = (t: string) => {
@@ -157,6 +175,18 @@ export function Probador({ empresas, inicial }: { empresas: { id: string; nombre
   const probar = () => {
     setResultado(null);
     startTransition(async () => setResultado(await probarComprobante(cuerpo)));
+  };
+
+  const emitir = () => {
+    setResultado(null);
+    startTransition(async () => {
+      const res = await emitirComprobante(cuerpo, clave);
+      if (!res.ok) {
+        setConfirmando(false);
+        return setResultado({ ok: false, error: res.error, param: res.param });
+      }
+      router.push(`/console/documentos/${res.documento.id}`);
+    });
   };
 
   const r = resultado?.ok ? resultado.respuesta : null;
@@ -306,7 +336,42 @@ export function Probador({ empresas, inicial }: { empresas: { id: string; nombre
             <Braces className="h-4 w-4" />
             JSON
           </button>
+          {enProduccion && !confirmando && (
+            <button
+              type="button"
+              onClick={() => setConfirmando(true)}
+              disabled={pendiente}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-500/40 px-4 py-2.5 text-sm font-medium text-emerald-300 hover:bg-emerald-500/10 disabled:opacity-60"
+            >
+              <Send className="h-4 w-4" />
+              Emitir
+            </button>
+          )}
         </div>
+        {enProduccion && confirmando && (
+          <div className="mt-4 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-4 text-sm text-fg">
+            <p>
+              <strong>Esto emite de verdad:</strong> va a SUNAT con valor legal, gasta un número y se cobra según tu consumo. Pruébalo
+              antes con <strong>Probar</strong> si no estás seguro.
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={emitir}
+                disabled={pendiente}
+                className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500 disabled:opacity-60"
+              >
+                {pendiente ? "Emitiendo…" : "Sí, emitir"}
+              </button>
+              <button type="button" onClick={() => setConfirmando(false)} disabled={pendiente} className="rounded-lg px-3 py-2 text-sm text-muted hover:text-fg">
+                Cancelar
+              </button>
+            </div>
+          </div>
+        )}
+        {!enProduccion && (
+          <p className="mt-3 text-xs text-subtle">Para emitir comprobantes reales desde aquí, la empresa tiene que estar en producción.</p>
+        )}
       </section>
 
       <section className="flex min-w-0 flex-col gap-4">

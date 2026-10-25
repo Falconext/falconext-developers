@@ -35,7 +35,7 @@ export default async function ProbarPage({ searchParams }: { searchParams: Promi
         </div>
       ) : (
         <Probador
-          empresas={empresas.map((e) => ({ id: e.id, nombre: e.trade_name || e.legal_name, ruc: e.ruc }))}
+          empresas={empresas.map((e) => ({ id: e.id, nombre: e.trade_name || e.legal_name, ruc: e.ruc, status: e.status }))}
           inicial={empresas.some((e) => e.id === issuer) ? issuer! : empresas[0].id}
         />
       )}

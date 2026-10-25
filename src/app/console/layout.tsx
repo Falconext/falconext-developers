@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { auth, signOut } from "@/auth";
-import { KeyRound, Webhook, LogOut, ArrowLeft, Building2, Gauge, FlaskConical } from "lucide-react";
+import { KeyRound, Webhook, LogOut, ArrowLeft, Building2, Gauge, FlaskConical, FileText } from "lucide-react";
 import { esKrezka } from "@/config/brand";
 
 export default async function ConsoleLayout({ children }: { children: ReactNode }) {
@@ -30,6 +30,11 @@ export default async function ConsoleLayout({ children }: { children: ReactNode 
             {esKrezka && session?.user && (
               <ConsoleNavLink href="/console/probar" icon={<FlaskConical className="h-4 w-4" />}>
                 Probar
+              </ConsoleNavLink>
+            )}
+            {esKrezka && session?.user && (
+              <ConsoleNavLink href="/console/documentos" icon={<FileText className="h-4 w-4" />}>
+                Documentos
               </ConsoleNavLink>
             )}
             {(session?.user || !esKrezka) && (
