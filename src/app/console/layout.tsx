@@ -27,12 +27,16 @@ export default async function ConsoleLayout({ children }: { children: ReactNode 
                 Mis empresas
               </ConsoleNavLink>
             )}
-            <ConsoleNavLink href="/console/api-keys" icon={<KeyRound className="h-4 w-4" />}>
-              {esKrezka ? "Claves" : "API keys"}
-            </ConsoleNavLink>
-            <ConsoleNavLink href="/console/webhooks" icon={<Webhook className="h-4 w-4" />}>
-              Webhooks
-            </ConsoleNavLink>
+            {(session?.user || !esKrezka) && (
+              <>
+                <ConsoleNavLink href="/console/api-keys" icon={<KeyRound className="h-4 w-4" />}>
+                  {esKrezka ? "Claves" : "API keys"}
+                </ConsoleNavLink>
+                <ConsoleNavLink href="/console/webhooks" icon={<Webhook className="h-4 w-4" />}>
+                  Webhooks
+                </ConsoleNavLink>
+              </>
+            )}
             {esKrezka && session?.user && (
               <ConsoleNavLink href="/console/consumo" icon={<Gauge className="h-4 w-4" />}>
                 Consumo y precios

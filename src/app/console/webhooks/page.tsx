@@ -33,10 +33,10 @@ export default async function WebhooksPage() {
           <p className="eyebrow mb-1">Eventos en tiempo real</p>
           <h1 className="font-display text-3xl font-semibold tracking-tight text-fg">Webhooks</h1>
           <p className="mt-2 text-sm text-muted">
-            Registra URLs que recibirán eventos del ciclo de vida de tus entregas. Cada
+            Registra URLs que recibirán eventos del ciclo de vida de {CONSOLA.queCambia}. Cada
             envío incluye una firma HMAC en{" "}
             <code className="rounded bg-subtle px-1 py-0.5 font-mono text-xs">
-              X-Falconext-Signature
+              {CONSOLA.firma}
             </code>{" "}
             que debes validar con el secret devuelto al crear el endpoint.
           </p>
@@ -53,8 +53,8 @@ export default async function WebhooksPage() {
           <Webhook className="mb-3 h-8 w-8 text-subtle" />
           <p className="text-sm font-medium text-fg">Aún no tienes endpoints registrados</p>
           <p className="mt-1 max-w-sm text-xs text-muted">
-            Registra tu primer endpoint para recibir eventos cuando cambie el estado de tus
-            entregas.
+            Registra tu primer endpoint para recibir eventos cuando cambie el estado de{" "}
+            {CONSOLA.queCambia}.
           </p>
         </div>
       ) : (

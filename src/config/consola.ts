@@ -16,6 +16,9 @@ export const CONSOLA = esKrezka
       webhooks: "/facturacion/consola/webhooks",
       cuerpoClave: (nombre: string | undefined, entorno: "live" | "test") => ({ name: nombre, environment: entorno }),
       eventos: ["invoice.accepted", "invoice.observed", "invoice.rejected", "invoice.voided"],
+      firma: "Krezka-Signature",
+      queCambia: "tus comprobantes",
+      ejemploUrl: "https://tu-app.com/webhooks/krezka",
     }
   : {
       producto: "API de Falconext Logística",
@@ -32,6 +35,9 @@ export const CONSOLA = esKrezka
         "order.failed",
         "order.returned",
       ],
+      firma: "Falconext-Signature",
+      queCambia: "tus entregas",
+      ejemploUrl: "https://tu-app.com/webhooks/falconext",
     };
 
 /** Los endpoints de webhook vienen con nombres distintos según el backend. */
