@@ -93,7 +93,7 @@ export function CreateWebhookDialog() {
                     name="url"
                     type="url"
                     required
-                    placeholder="https://tu-app.com/webhooks/falconext"
+                    placeholder={CONSOLA.ejemploUrl}
                     className="rounded-lg border border-app bg-app px-3 py-2 text-sm text-fg outline-none focus:border-violet-500/50"
                   />
                 </label>
@@ -141,7 +141,7 @@ export function CreateWebhookDialog() {
                 <div className="rounded-lg border border-amber-signal/30 bg-amber-signal/10 px-3 py-2 text-xs text-amber-signal">
                   Guarda este secret ahora. Se usa para validar la firma HMAC
                   <code className="mx-1 rounded bg-black/20 px-1 py-0.5 font-mono">
-                    X-Falconext-Signature
+                    {CONSOLA.firma}
                   </code>{" "}
                   y no podrás verlo de nuevo.
                 </div>
