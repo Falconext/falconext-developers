@@ -81,7 +81,15 @@ export default async function EmpresaPage({ params }: { params: Promise<{ id: st
       </div>
 
       <section className="mt-6">
-        <h2 className="mb-2 text-sm font-semibold text-fg">Tu primera boleta de prueba</h2>
+        <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-sm font-semibold text-fg">Tu primera boleta de prueba</h2>
+          <Link
+            href={`/console/probar?issuer=${encodeURIComponent(e.id)}`}
+            className="text-sm font-medium text-violet-400 hover:text-violet-300"
+          >
+            Armarla con un formulario →
+          </Link>
+        </div>
         <p className="mb-3 text-sm text-muted">
           Crea una clave de prueba en <Link href="/console/api-keys" className="text-violet-400 hover:text-violet-300">Claves</Link> y
           prueba esto. Con <code className="font-mono text-xs">sk_test_</code> la respuesta trae el total, el IGV y el número que le tocaría, sin emitir nada.
