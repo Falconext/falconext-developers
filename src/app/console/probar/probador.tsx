@@ -346,7 +346,7 @@ export function Probador({ empresas, inicial }: { empresas: { id: string; nombre
           <>
             <div className="rounded-xl border border-app bg-surface p-5">
               <div className="flex items-start justify-between gap-4">
-                <div>
+                <div className="min-w-0">
                   <span className="inline-flex rounded-full bg-amber-signal/15 px-2 py-0.5 text-[0.7rem] font-medium text-amber-signal">Prueba · sin valor legal</span>
                   <h2 className="mt-2 font-display text-lg font-semibold text-fg">
                     {r.document_type === "invoice" ? "Factura" : "Boleta"} {r.number_preview ?? ""}
@@ -355,7 +355,7 @@ export function Probador({ empresas, inicial }: { empresas: { id: string; nombre
                     {empresas.find((e) => e.id === r.issuer_id)?.nombre} · {r.issue_date}
                   </p>
                 </div>
-                <p className="text-right font-display text-2xl font-semibold text-fg">{dinero(r.totals?.total)}</p>
+                <p className="shrink-0 whitespace-nowrap text-right font-display text-2xl font-semibold text-fg">{dinero(r.totals?.total)}</p>
               </div>
               <p className="mt-4 text-sm text-fg">
                 {r.customer?.name} <span className="text-muted">· {String(r.customer?.document_type ?? "").toUpperCase()} {r.customer?.document_number}</span>
