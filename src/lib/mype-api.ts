@@ -14,6 +14,8 @@ export class MypeApiError extends Error {
   constructor(
     message: string,
     public readonly status: number,
+    /** El campo con el problema, cuando la API de facturación lo dice. */
+    public readonly param?: string,
   ) {
     super(message);
   }
@@ -40,10 +42,12 @@ export async function mypeApi<T = unknown>(
   });
 
   const wrapped = await res.json().catch(() => null);
-  const message = wrapped?.message ?? `HTTP ${res.status}`;
+  // Los errores de la API de facturación traen el campo con el problema
+  // (`param`), sea en el envelope interno o en `{ error: { message, param } }`.
+  const message = wrapped?.message ?? wrapped?.error?.message ?? `HTTP ${res.status}`;
 
   if (!res.ok || wrapped?.code === 0) {
-    throw new MypeApiError(message, res.status);
+    throw new MypeApiError(message, res.status, wrapped?.param ?? wrapped?.error?.param);
   }
 
   return (wrapped?.data ?? wrapped) as T;
