@@ -1,82 +1,41 @@
 ---
 title: Precios
-description: Pagas por comprobante emitido. Sin costo de integración, sin mensualidad por RUC.
+description: Pagas por empresa y por mes, solo por los comprobantes que SUNAT acepta.
 group: Precios
 order: 20
 ---
 
-Pagas **por comprobante que SUNAT acepta**. Sin costo de implementación, sin tarifa por
-cada RUC que agregues, sin permanencia. Facturamos a fin de mes lo consumido.
+Pagas **por empresa (RUC) y por mes**, solo por los comprobantes que **SUNAT acepta**. Sin
+costo de implementación, sin mínimo mensual y sin permanencia. Registrarte, agregar
+empresas y probar con claves `sk_test_` es gratis.
 
-## Tarifa de lanzamiento
+## Tarifa por empresa
 
-| Comprobantes en el mes | Precio por comprobante |
+| Comprobantes de la empresa en el mes | Precio |
 | --- | --- |
-| Hasta 20,000 | S/ 0.05 |
-| 20,001 a 50,000 | S/ 0.04 |
-| Más de 50,000 | S/ 0.03 |
+| Hasta 20 | S/ 0.05 cada uno |
+| De 21 a 100 | S/ 5.00 al mes |
+| Más de 100 | S/ 5.00 + S/ 0.05 por cada uno sobre 100 |
 
-Precios sin IGV. Mínimo mensual de S/ 30. El tramo se aplica sobre el total del mes, no
-por escalones.
+Precios sin IGV. Si tienes varias empresas, pagas la suma de todas.
+
+**Ejemplos (con IGV):** una empresa con 18 comprobantes paga S/ 1.06; con 98, S/ 5.90; con
+150, S/ 8.85.
 
 ## Qué cuenta y qué no
 
 | Cuenta | No cuenta |
 | --- | --- |
-| Factura o boleta aceptada por SUNAT | Comprobantes de prueba (`sk_test_`) |
+| Factura o boleta aceptada por SUNAT | Todo lo que haces con una clave `sk_test_` |
 | Nota de crédito aceptada | Comprobantes rechazados por SUNAT |
 | | Consultas, descargas y webhooks |
-| | Comunicaciones de baja |
-
-Un comprobante rechazado no se cobra aunque haya consumido una firma: corrígelo y emítelo
-de nuevo, y pagas una sola vez.
 
 ## Qué incluye
 
-- Certificado digital y proveedor de firma (PSE) incluidos. No contratas nada aparte.
-- RUC ilimitados bajo una sola cuenta de integrador.
-- XML, CDR y PDF guardados y descargables sin límite de tiempo.
-- Ambiente de pruebas permanente y gratuito.
-- Webhooks, SDKs y soporte técnico por correo.
+- Proveedor de firma (PSE) incluido: no compras certificado digital.
+- Empresas (RUC) ilimitadas bajo una sola cuenta.
+- XML, CDR y PDF guardados y descargables.
+- Modo prueba permanente y gratuito.
+- Webhooks firmados y soporte por WhatsApp y correo.
 
-## Cómo ver lo que llevas consumido
-
-No hace falta esperar la factura. `GET /usage` devuelve el consumo del mes en curso con el
-detalle por emisor, que es lo que necesitas para repartir el costo entre tus clientes:
-
-```json
-{
-  "period": "2026-11",
-  "status": "open",
-  "billable_count": 1240,
-  "unit_price": 0.05,
-  "subtotal": 62.00,
-  "tax": 11.16,
-  "total": 73.16,
-  "by_issuer": [
-    { "issuer_id": "iss_8Kp2Qm3x", "name": "BODEGA LA ESQUINA", "count": 830 },
-    { "issuer_id": "iss_3xK8p2Qm", "name": "FERRETERÍA CENTRAL", "count": 410 }
-  ]
-}
-```
-
-Mientras el mes está abierto (`status: "open"`) el número se calcula en vivo contra tus
-comprobantes, así que siempre es la verdad. Cuando el período se cierra pasa a
-`"closed"` y **ya no se mueve**: es exactamente lo que dice tu factura, incluso si después
-anulas un comprobante de ese mes.
-
-## Cómo se cobra
-
-El día 2 de cada mes cerramos el mes anterior y emitimos la factura, con el detalle por
-emisor, y la cobramos a la tarjeta registrada. Se cierra el 2 y no el 1 por una razón
-práctica: un comprobante emitido el último día a las 23:50 puede estar todavía esperando
-el CDR cuando cambia la fecha, y queremos que caiga en el mes en que lo emitiste.
-
-Si SUNAT acepta un comprobante después del cierre, no se pierde ni se cobra dos veces:
-entra en el período siguiente. Si prefieres pago por transferencia o
-necesitas un tope de crédito distinto, escríbenos a developers@falconext.pe.
-
-<Callout type="note" title="Alto volumen por un solo RUC">
-Si un solo emisor supera los 3,000 comprobantes al mes de forma sostenida, hay una tarifa
-plana por RUC. Pídela antes de comparar con proveedores de tarifa plana.
-</Callout>
+Ve tu consumo del mes, empresa por empresa, en la [consola](/console/consumo).

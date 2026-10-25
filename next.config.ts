@@ -47,7 +47,6 @@ const nextConfig: NextConfig = {
           destination: "/erp/2026-10-22/getting-started",
           permanent: false,
         },
-        { source: "/console/:path*", destination: "https://app.krezka.com/administrador/api-krezka", permanent: false },
       ];
     }
     return Object.entries(map).map(([source, destination]) => ({

@@ -1,23 +1,25 @@
 ---
 title: Primeros pasos
-description: Emite tu primera factura electrónica válida ante SUNAT con la API de Falconext en minutos.
+description: Emite tu primera factura electrónica válida ante SUNAT con la API de Krezka en minutos.
 group: Introducción
 order: 1
 ---
 
-Bienvenido a **Falconext Facturación Electrónica**. En esta guía emitirás tu primera
-factura de prueba y recibirás su aceptación de SUNAT por webhook. Toma unos cinco minutos.
+Bienvenido a **Krezka Facturación Electrónica**: emite facturas, boletas y notas de crédito
+válidas ante SUNAT desde tu propio sistema, sin XML ni certificados. No necesitas usar el
+sistema Krezka: todo se hace desde la consola y la API.
 
-<Callout type="note" title="Lo que necesitas">
-Una cuenta de Falconext con al menos un emisor en estado `active` y una API key de
-pruebas (`sk_test_…`). Las keys de pruebas emiten contra el ambiente de pruebas de SUNAT:
-los comprobantes no tienen validez tributaria y no consumen tu saldo.
+<Callout type="note" title="Lo que necesitas (5 minutos, gratis)">
+1. [Crea tu cuenta](/console/registro) en la consola.
+2. En **Mis empresas**, agrega tu empresa con su RUC: traemos sus datos de SUNAT y queda en **prueba**.
+3. En **Claves**, crea una clave de prueba (`sk_test_…`). Con ella todo se valida de verdad y nada se emite ni se cobra.
+4. Cuando tu integración funcione, pasa la empresa a producción y usa una clave `sk_live_…`.
 </Callout>
 
 ## Cómo funciona
 
 1. Envías el comprobante en JSON: cliente, líneas y condición de pago. Nada de XML.
-2. Falconext asigna el correlativo, firma el XML y lo envía a SUNAT. La respuesta es inmediata, con `status: pending`.
+2. Krezka asigna el correlativo, firma el XML y lo envía a SUNAT. La respuesta es inmediata, con `status: pending`.
 3. SUNAT responde en segundos. Te avisamos por webhook (`invoice.accepted` o `invoice.rejected`) y dejamos listos el XML, el CDR y el PDF.
 
 ## Emite tu primera factura
@@ -28,8 +30,8 @@ los comprobantes no tienen validez tributaria y no consumen tu saldo.
 Cada factura se emite por un **emisor** (un RUC). Lista los tuyos:
 
 ```bash
-curl https://api.falconext.pe/api/v1/invoicing/issuers \
-  -H "Authorization: Bearer $FALCONEXT_API_KEY"
+curl https://api.krezka.com/api/v1/invoicing/issuers \
+  -H "Authorization: Bearer $KREZKA_API_KEY"
 ```
 
 Guarda el `id` del emisor (`iss_…`) y revisa que su `status` sea `active`.
@@ -38,8 +40,8 @@ Guarda el `id` del emisor (`iss_…`) y revisa que su `status` sea `active`.
 <Step title="Envía el comprobante">
 
 ```bash
-curl -X POST https://api.falconext.pe/api/v1/invoicing/invoices \
-  -H "Authorization: Bearer $FALCONEXT_API_KEY" \
+curl -X POST https://api.krezka.com/api/v1/invoicing/invoices \
+  -H "Authorization: Bearer $KREZKA_API_KEY" \
   -H "Idempotency-Key: $(uuidgen)" \
   -H "Content-Type: application/json" \
   -d '{
@@ -78,10 +80,10 @@ La respuesta llega con el correlativo ya asignado y `status: pending`:
 Registra un endpoint y suscríbete a `invoice.accepted` e `invoice.rejected`:
 
 ```bash
-curl -X POST https://api.falconext.pe/api/v1/invoicing/webhook_endpoints \
-  -H "Authorization: Bearer $FALCONEXT_API_KEY" \
+curl -X POST https://api.krezka.com/api/v1/invoicing/webhook_endpoints \
+  -H "Authorization: Bearer $KREZKA_API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{ "url": "https://tu-app.com/webhooks/falconext", "events": ["invoice.accepted", "invoice.rejected"] }'
+  -d '{ "url": "https://tu-app.com/webhooks/krezka", "events": ["invoice.accepted", "invoice.rejected"] }'
 ```
 
 Si prefieres consultar, `GET /invoices/{id}` devuelve el estado y su historial.
@@ -92,8 +94,8 @@ Si prefieres consultar, `GET /invoices/{id}` devuelve el estado y su historial.
 Cuando el estado sea `accepted`, pide los enlaces firmados:
 
 ```bash
-curl https://api.falconext.pe/api/v1/invoicing/invoices/inv_3xK8p2Qm/pdf \
-  -H "Authorization: Bearer $FALCONEXT_API_KEY"
+curl https://api.krezka.com/api/v1/invoicing/invoices/inv_3xK8p2Qm/pdf \
+  -H "Authorization: Bearer $KREZKA_API_KEY"
 ```
 
 Lo mismo con `/xml` y `/cdr`. Los enlaces duran 15 minutos; pídelos cada vez que los necesites.

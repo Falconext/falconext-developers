@@ -12,8 +12,10 @@ integrador, a un entorno, y puede emitir por todos los emisores (RUC) de ese ent
 
 | Prefijo | Entorno | Qué hace |
 | --- | --- | --- |
-| `sk_test_…` | Pruebas | Emite contra el ambiente de pruebas de SUNAT. Sin validez tributaria, sin costo. |
-| `sk_live_…` | Producción | Emite comprobantes reales. Cada uno consume tu plan. |
+| `sk_test_…` | Pruebas | Valida todo de verdad (emisor, cliente, ítems, cuotas) y responde cómo habría quedado: `livemode: false`, `status: "test"`, totales e IGV, y el número que le tocaría (`number_preview`). **No emite, no gasta número, no va a SUNAT y no se cobra.** |
+| `sk_live_…` | Producción | Emite comprobantes reales ante SUNAT. Se cobran los que SUNAT acepta. |
+
+Las claves se crean en la [consola](/console/api-keys). Con una clave de prueba puedes encadenar todo el flujo: el `id` que devuelve (`inv_test_…`) sirve para probar la anulación y la nota de crédito.
 
 ## Cómo enviarla
 
@@ -21,7 +23,7 @@ Como Bearer token en la cabecera `Authorization`:
 
 ```http
 GET /api/v1/invoicing/issuers HTTP/1.1
-Host: api.falconext.pe
+Host: api.krezka.com
 Authorization: Bearer sk_live_a1b2c3…
 ```
 
@@ -48,4 +50,4 @@ Una key solo ve sus propios emisores. Intentar emitir con un `issuer_id` ajeno d
 | `401` | `missing_api_key` | No enviaste la cabecera. |
 | `401` | `invalid_api_key` | La key no existe o fue revocada. |
 | `403` | `issuer_forbidden` | El emisor no pertenece a tu integración. |
-| `403` | `environment_mismatch` | Key `sk_test_` con un emisor `live`, o al revés. |
+| `409` | `issuer_not_configured` | Clave `sk_live_` con una empresa que todavía está en prueba. Pásala a producción desde la consola. |

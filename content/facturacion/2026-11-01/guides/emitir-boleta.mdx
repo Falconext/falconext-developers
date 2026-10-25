@@ -11,8 +11,8 @@ necesita RUC y, por debajo de S/ 700, ni siquiera documento.
 ## Con DNI
 
 ```bash
-curl -X POST https://api.falconext.pe/api/v1/invoicing/invoices \
-  -H "Authorization: Bearer $FALCONEXT_API_KEY" \
+curl -X POST https://api.krezka.com/api/v1/invoicing/invoices \
+  -H "Authorization: Bearer $KREZKA_API_KEY" \
   -H "Idempotency-Key: $(uuidgen)" \
   -H "Content-Type: application/json" \
   -d '{

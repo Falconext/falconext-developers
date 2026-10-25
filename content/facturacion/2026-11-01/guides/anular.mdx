@@ -1,32 +1,38 @@
 ---
 title: Anular un comprobante
-description: Comunicación de baja dentro de los 7 días, y qué hacer después.
+description: Se anula con una nota de crédito por anulación de la operación.
 group: Guías
 order: 33
 ---
 
-Dentro de los **7 días calendario** desde la emisión, un comprobante aceptado se puede dar
-de baja. Pasado ese plazo, usa una [nota de crédito](/facturacion/2026-11-01/guides/nota-de-credito).
+Un comprobante aceptado por SUNAT se anula con una **nota de crédito por "anulación de la
+operación"** (motivo 01 del catálogo 09) por el total. La API la emite por ti: copia las
+líneas del comprobante y la envía a SUNAT.
 
 ```bash
-curl -X POST https://api.falconext.pe/api/v1/invoicing/invoices/inv_3xK8p2Qm/void \
-  -H "Authorization: Bearer $FALCONEXT_API_KEY" \
+curl -X POST https://api.krezka.com/api/v1/invoicing/invoices/inv_3xK8p2Qm/void \
+  -H "Authorization: Bearer $KREZKA_API_KEY" \
   -H "Idempotency-Key: $(uuidgen)" \
   -H "Content-Type: application/json" \
   -d '{ "reason": "Error en los datos del cliente" }'
 ```
 
-La respuesta es `202` con `status: voiding`. Cuando SUNAT acepte la baja recibes
-`invoice.voided` y el estado pasa a `voided`.
+La respuesta es `202` con `void_method: "credit_note"` y la nota emitida en `credit_note`
+(`id`, `full_number`, `status`). La nota sigue su propio ciclo con SUNAT: consúltala con
+`GET /credit_notes/{id}`.
+
+Con una clave `sk_test_` se valida todo y no se emite la nota. Contra un `inv_test_…` de
+prueba responde `status: "voided"` para que pruebes tu flujo.
 
 ## Errores frecuentes
 
 | `error.code` | Qué significa |
 | --- | --- |
-| `invoice_not_voidable` | El comprobante no está `accepted` ni `observed`. Uno `rejected` no se anula: ya no existe ante SUNAT. |
-| `void_window_expired` | Pasaron más de 7 días. Emite una nota de crédito. |
+| `invalid_state` | El comprobante no está `accepted` ni `observed`. Uno `rejected` no se anula: para SUNAT nunca existió. |
+| `already_voided` | Ya tiene su nota de crédito de anulación. |
+| `parameter_missing` | Falta `reason` (SUNAT exige el motivo). |
 
 <Callout type="warning" title="El correlativo no se reutiliza">
-Un comprobante dado de baja sigue ocupando su número. El siguiente se emite con el
-correlativo que sigue.
+Un comprobante anulado sigue ocupando su número. El siguiente se emite con el correlativo
+que sigue.
 </Callout>

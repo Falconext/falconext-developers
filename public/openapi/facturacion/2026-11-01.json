@@ -1,19 +1,19 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Falconext Facturación Electrónica API",
+    "title": "Krezka Facturación Electrónica API",
     "version": "2026-11-01",
-    "x-status": "CONTRATO v1 (fase 1 del plan). Fachada en inglés sobre el motor real de comprobantes de falconext-mype (ComprobanteService + EnviarSunatService + QpseClient). El backend se implementa contra este contrato y se valida con drift-check, como Logística. No publicar como GA hasta que el backend lo cubra.",
-    "description": "Emite facturas, boletas y notas de crédito válidas ante SUNAT desde tu propio sistema. Falconext firma, envía, guarda el CDR y te avisa por webhook. Tú no tocas XML, certificados ni SUNAT.\n\n**Asíncrono por diseño:** emitir responde en milisegundos con el correlativo asignado; la aceptación de SUNAT llega después por webhook. **Idempotente:** cada POST lleva Idempotency-Key, así un reintento nunca emite dos veces.",
+    "x-status": "CONTRATO v1 (fase 1 del plan). Fachada en inglés sobre el motor real de comprobantes de Krezka (ComprobanteService + EnviarSunatService + QpseClient). El backend se implementa contra este contrato y se valida con drift-check, como Logística. No publicar como GA hasta que el backend lo cubra.",
+    "description": "Emite facturas, boletas y notas de crédito válidas ante SUNAT desde tu propio sistema. Krezka firma, envía, guarda el CDR y te avisa por webhook. Tú no tocas XML, certificados ni SUNAT.\n\n**Asíncrono por diseño:** emitir responde en milisegundos con el correlativo asignado; la aceptación de SUNAT llega después por webhook. **Idempotente:** cada POST lleva Idempotency-Key, así un reintento nunca emite dos veces.",
     "contact": {
-      "name": "Soporte Falconext",
-      "email": "developers@falconext.pe"
+      "name": "Soporte Krezka",
+      "email": "soporte@krezka.com"
     }
   },
   "servers": [
     {
-      "url": "https://api.falconext.pe/api/v1/invoicing",
-      "description": "Producción. Las keys sk_test_ emiten contra el ambiente de pruebas de SUNAT en este mismo host."
+      "url": "https://api.krezka.com/api/v1/invoicing",
+      "description": "Producción. Con una clave sk_test_ todo se valida y nada se emite (modo prueba); con sk_live_ se emite ante SUNAT."
     }
   ],
   "security": [
@@ -47,7 +47,7 @@
         ],
         "summary": "Emitir una factura o boleta",
         "operationId": "createInvoice",
-        "description": "Valida, firma y envía el comprobante a SUNAT. La respuesta es inmediata con status: pending; el resultado de SUNAT llega por webhook (invoice.accepted / invoice.rejected) o consultando GET /invoices/{id}. El correlativo lo asigna Falconext y es definitivo desde esta respuesta.",
+        "description": "Valida, firma y envía el comprobante a SUNAT. La respuesta es inmediata con status: pending; el resultado de SUNAT llega por webhook (invoice.accepted / invoice.rejected) o consultando GET /invoices/{id}. El correlativo lo asigna Krezka y es definitivo desde esta respuesta.",
         "parameters": [
           {
             "$ref": "#/components/parameters/IdempotencyKey"
@@ -778,7 +778,7 @@
           "voiding",
           "voided"
         ],
-        "description": "pending: aceptado por Falconext, aún no enviado a SUNAT (o reintentándose). sent: enviado, esperando el CDR. accepted: SUNAT lo aceptó (CDR 0). observed: aceptado con observaciones (CDR 4xxx); es válido, NO lo reemitas. rejected: SUNAT lo rechazó (CDR 2xxx/3xxx); corrige y emite uno nuevo. reconciling: SUNAT reporta el documento como ya registrado pero no devuelve el CDR. El comprobante existe para SUNAT: **no lo reemitas**, duplicarías. Lo resolvemos y te avisamos por webhook. voiding: comunicación de baja enviada. voided: baja aceptada."
+        "description": "pending: aceptado por Krezka, aún no enviado a SUNAT (o reintentándose). sent: enviado, esperando el CDR. accepted: SUNAT lo aceptó (CDR 0). observed: aceptado con observaciones (CDR 4xxx); es válido, NO lo reemitas. rejected: SUNAT lo rechazó (CDR 2xxx/3xxx); corrige y emite uno nuevo. reconciling: SUNAT reporta el documento como ya registrado pero no devuelve el CDR. El comprobante existe para SUNAT: **no lo reemitas**, duplicarías. Lo resolvemos y te avisamos por webhook. voiding: comunicación de baja enviada. voided: baja aceptada."
       },
       "CustomerDocumentType": {
         "type": "string",
@@ -868,7 +868,7 @@
           "unit_value": {
             "type": "number",
             "format": "double",
-            "description": "Valor unitario **sin IGV**. El IGV lo calcula Falconext según tax_affectation.",
+            "description": "Valor unitario **sin IGV**. El IGV lo calcula Krezka según tax_affectation.",
             "example": 500.0
           },
           "tax_affectation": {
@@ -949,7 +949,7 @@
           },
           "series": {
             "type": "string",
-            "description": "Serie a usar (F001, B001). Si la omites se usa la serie por defecto del emisor para ese tipo. El número correlativo **siempre** lo asigna Falconext.",
+            "description": "Serie a usar (F001, B001). Si la omites se usa la serie por defecto del emisor para ese tipo. El número correlativo **siempre** lo asigna Krezka.",
             "example": "F001"
           },
           "issue_date": {
@@ -1015,7 +1015,7 @@
       },
       "Totals": {
         "type": "object",
-        "description": "Los calcula Falconext; nunca los envíes.",
+        "description": "Los calcula Krezka; nunca los envíes.",
         "properties": {
           "taxable": {
             "type": "number",
@@ -1539,7 +1539,7 @@
           "url": {
             "type": "string",
             "format": "uri",
-            "example": "https://tu-app.com/webhooks/falconext"
+            "example": "https://tu-app.com/webhooks/krezka"
           },
           "events": {
             "type": "array",

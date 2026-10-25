@@ -1,4 +1,5 @@
 import { mypeApi } from "@/lib/mype-api";
+import { CONSOLA } from "@/config/consola";
 import { revokeApiKey } from "./actions";
 import { CreateKeyDialog } from "./create-key-dialog";
 import { KeyRound } from "lucide-react";
@@ -22,7 +23,7 @@ export default async function ApiKeysPage() {
   let loadError: string | null = null;
 
   try {
-    keys = await mypeApi<ApiKey[]>("/logistica/api-keys");
+    keys = await mypeApi<ApiKey[]>(CONSOLA.claves);
   } catch (err: any) {
     loadError = err?.message ?? "No se pudieron cargar las API keys";
   }
@@ -34,7 +35,7 @@ export default async function ApiKeysPage() {
           <p className="eyebrow mb-1">Autenticación</p>
           <h1 className="font-display text-3xl font-semibold tracking-tight text-fg">API keys</h1>
           <p className="mt-2 text-sm text-muted">
-            Genera claves para autenticar tus llamadas a la API de Falconext Logística.
+            Genera claves para autenticar tus llamadas a la {CONSOLA.producto}.
             Usa <code className="rounded bg-subtle px-1 py-0.5 font-mono text-xs">sk_test_…</code>{" "}
             para desarrollo y{" "}
             <code className="rounded bg-subtle px-1 py-0.5 font-mono text-xs">sk_live_…</code>{" "}

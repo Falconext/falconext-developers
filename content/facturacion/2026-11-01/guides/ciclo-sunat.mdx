@@ -10,7 +10,7 @@ El estado del comprobante te dice en cuál está.
 
 | Estado | Significa | Qué hacer |
 | --- | --- | --- |
-| `pending` | Falconext lo aceptó, asignó correlativo y lo puso en cola. | Nada. Guarda el `id` y el `full_number`. |
+| `pending` | Krezka lo aceptó, asignó correlativo y lo puso en cola. | Nada. Guarda el `id` y el `full_number`. |
 | `sent` | El XML firmado salió hacia SUNAT. | Nada. Suele durar segundos. |
 | `accepted` | SUNAT lo aceptó. El CDR está disponible. | Es válido. Entrega el PDF al cliente. |
 | `observed` | SUNAT lo aceptó con observaciones. | Es válido. Lee el mensaje y corrige en adelante. |
@@ -21,11 +21,11 @@ El estado del comprobante te dice en cuál está.
 
 ## Si SUNAT no responde
 
-Si SUNAT está caída, el comprobante se queda en `sent` y Falconext reintenta solo. No
+Si SUNAT está caída, el comprobante se queda en `sent` y Krezka reintenta solo. No
 emitas de nuevo: usarías otro correlativo para la misma venta. Cuando SUNAT vuelva, llega
 el webhook con el resultado.
 
-## Si Falconext no responde
+## Si Krezka no responde
 
 Si tu `POST` no recibe respuesta (timeout, `5xx`), **reintenta con la misma
 `Idempotency-Key`**. Si el comprobante ya se había creado, recibes el mismo; si no, se crea
@@ -34,7 +34,7 @@ ahora. Nunca se emiten dos.
 ## El CDR
 
 El CDR es la constancia de SUNAT. Está disponible en `GET /invoices/{id}/cdr` desde
-`accepted`, `observed` o `rejected`. Guárdalo si tu auditoría lo exige; Falconext lo
+`accepted`, `observed` o `rejected`. Guárdalo si tu auditoría lo exige; Krezka lo
 conserva de todos modos.
 
 ## `reconciling`: el estado que existe para que no dupliques
@@ -51,7 +51,7 @@ conversación con tu cliente.
 Por eso `reconciling` no es un error ni un rechazo. Significa: *está en SUNAT, nos falta
 el papel, lo estamos resolviendo*. Lo único que tienes que hacer es nada.
 
-Falconext reconsulta hasta obtener el CDR y te avisa con `invoice.accepted` (o
+Krezka reconsulta hasta obtener el CDR y te avisa con `invoice.accepted` (o
 `invoice.rejected`, si al final SUNAT lo rechazó). Mientras tanto:
 
 - El comprobante **ya consume** su correlativo: no lo reutilices.

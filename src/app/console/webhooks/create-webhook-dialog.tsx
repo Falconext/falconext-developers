@@ -3,16 +3,9 @@
 import { useState, useTransition } from "react";
 import { Check, Copy, Plus, Webhook, X } from "lucide-react";
 import { createWebhookEndpoint } from "./actions";
+import { CONSOLA } from "@/config/consola";
 
-const AVAILABLE_EVENTS = [
-  "order.created",
-  "order.assigned",
-  "order.picked_up",
-  "order.in_transit",
-  "order.delivered",
-  "order.failed",
-  "order.returned",
-];
+const AVAILABLE_EVENTS = CONSOLA.eventos;
 
 type Created = {
   endpointId: string;

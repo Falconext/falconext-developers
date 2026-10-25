@@ -105,6 +105,27 @@ export function KrezkaHome() {
         </div>
       </section>
 
+      <section className="mx-auto max-w-[1400px] px-4 pb-12 sm:px-6">
+        <div className="flex flex-col gap-4 rounded-card border border-emerald-500/30 bg-emerald-500/5 p-6 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="font-display text-xl font-semibold">¿Solo quieres facturar desde tu sistema?</p>
+            <p className="mt-1 max-w-2xl text-sm leading-relaxed text-muted">
+              Con la <strong>API de Facturación</strong> emites facturas y boletas ante SUNAT sin usar el sistema Krezka.
+              Regístrate gratis, agrega tus empresas por RUC y prueba sin emitir nada. Desde S/ 0.05 por comprobante.
+            </p>
+          </div>
+          <div className="flex shrink-0 flex-wrap gap-2">
+            <Button href="/console/registro" className="group">
+              Crear cuenta gratis
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+            </Button>
+            <Button href="/facturacion/2026-11-01/getting-started" variant="secondary">
+              Ver documentación
+            </Button>
+          </div>
+        </div>
+      </section>
+
       <section className="mx-auto max-w-[1400px] px-4 pb-20 sm:px-6">
         <h2 className="mb-6 font-display text-2xl font-semibold tracking-tight">Qué puedes hacer</h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

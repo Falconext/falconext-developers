@@ -11,8 +11,8 @@ activo; si no, el comprobante se rechaza.
 ## Al contado
 
 ```bash
-curl -X POST https://api.falconext.pe/api/v1/invoicing/invoices \
-  -H "Authorization: Bearer $FALCONEXT_API_KEY" \
+curl -X POST https://api.krezka.com/api/v1/invoicing/invoices \
+  -H "Authorization: Bearer $KREZKA_API_KEY" \
   -H "Idempotency-Key: 5f7c1e2a-9b3d-4a6e-8c1f-2d4b6e8a0c12" \
   -H "Content-Type: application/json" \
   -d '{
@@ -27,7 +27,7 @@ curl -X POST https://api.falconext.pe/api/v1/invoicing/invoices \
   }'
 ```
 
-Los totales los calcula Falconext: `taxable` 5,090.00, `tax` 916.20, `total` 6,006.20.
+Los totales los calcula Krezka: `taxable` 5,090.00, `tax` 916.20, `total` 6,006.20.
 
 ## Al crédito
 
@@ -66,5 +66,5 @@ Cada línea lleva su propia afectación. Un comprobante puede mezclarlas:
 
 <Callout type="warning" title="unit_value es sin IGV">
 Envía siempre el valor **sin IGV**. Si tu sistema guarda precios con IGV, divide entre
-1.18 antes de enviar. Falconext calcula el impuesto según `tax_affectation`.
+1.18 antes de enviar. Krezka calcula el impuesto según `tax_affectation`.
 </Callout>

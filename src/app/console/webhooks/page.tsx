@@ -1,4 +1,5 @@
 import { mypeApi } from "@/lib/mype-api";
+import { CONSOLA, normalizarEndpoints } from "@/config/consola";
 import { deleteWebhookEndpoint } from "./actions";
 import { CreateWebhookDialog } from "./create-webhook-dialog";
 import { Webhook } from "lucide-react";
@@ -20,7 +21,7 @@ export default async function WebhooksPage() {
   let loadError: string | null = null;
 
   try {
-    endpoints = await mypeApi<Endpoint[]>("/logistica/webhooks");
+    endpoints = normalizarEndpoints(await mypeApi<unknown>(CONSOLA.webhooks));
   } catch (err: any) {
     loadError = err?.message ?? "No se pudieron cargar los endpoints";
   }
