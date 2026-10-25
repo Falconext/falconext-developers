@@ -82,7 +82,7 @@ export function Pagos({ cobros, enLinea }: { cobros: Cobro[]; enLinea: boolean }
                   </span>
                 ) : c.overdue ? (
                   <span className="inline-flex rounded-full bg-rose-500/15 px-2 py-0.5 text-[0.7rem] font-medium text-rose-300">
-                    Vencido · {fecha(c.due_date)}
+                    Vencido · emisión pausada
                   </span>
                 ) : (
                   <span className="inline-flex rounded-full bg-amber-signal/15 px-2 py-0.5 text-[0.7rem] font-medium text-amber-signal">

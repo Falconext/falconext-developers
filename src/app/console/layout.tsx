@@ -3,9 +3,22 @@ import Link from "next/link";
 import { auth, signOut } from "@/auth";
 import { KeyRound, Webhook, LogOut, ArrowLeft, Building2, Gauge, FlaskConical, FileText } from "lucide-react";
 import { esKrezka } from "@/config/brand";
+import { mypeApi } from "@/lib/mype-api";
 
 export default async function ConsoleLayout({ children }: { children: ReactNode }) {
   const session = await auth();
+  // Con un cobro vencido la API no emite: se avisa en todas las pantallas, no
+  // solo en Consumo, para que nadie lo descubra por un 402 en producción.
+  let vencido: { total: number } | null = null;
+  if (esKrezka && session?.user) {
+    try {
+      const r = await mypeApi<{ data: { status: string; overdue: boolean; amount: number }[] }>("/facturacion/consola/cobros");
+      const v = (r.data ?? []).filter((c) => c.status === "pending" && c.overdue);
+      if (v.length) vencido = { total: v.reduce((s, c) => s + Number(c.amount || 0), 0) };
+    } catch {
+      vencido = null;
+    }
+  }
 
   return (
     <div className="min-h-screen bg-app text-fg">
@@ -77,7 +90,20 @@ export default async function ConsoleLayout({ children }: { children: ReactNode 
           )}
         </aside>
 
-        <main className="min-w-0 flex-1">{children}</main>
+        <main className="min-w-0 flex-1">
+          {vencido && (
+            <div role="alert" className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-rose-500/40 bg-rose-500/10 p-4 text-sm text-rose-200">
+              <p>
+                <strong>Tienes un pago vencido (S/ {vencido.total.toFixed(2)}).</strong> La emisión de comprobantes está pausada hasta que
+                pagues. Probar, consultar y anular siguen funcionando.
+              </p>
+              <Link href="/console/consumo" className="rounded-lg bg-rose-600 px-3 py-1.5 font-medium text-white hover:bg-rose-500">
+                Pagar ahora
+              </Link>
+            </div>
+          )}
+          {children}
+        </main>
       </div>
     </div>
   );

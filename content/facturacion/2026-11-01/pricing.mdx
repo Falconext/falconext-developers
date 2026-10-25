@@ -38,4 +38,15 @@ Precios sin IGV. Si tienes varias empresas, pagas la suma de todas.
 - Modo prueba permanente y gratuito.
 - Webhooks firmados y soporte por WhatsApp y correo.
 
+## Cómo y cuándo pagas
+
+El día 2 de cada mes cerramos el mes anterior y te llega un correo con el total. Tienes
+**15 días** para pagarlo con Mercado Pago (tarjeta, Yape o saldo) desde la
+[consola](/console/consumo).
+
+Si el cobro vence sin pagarse, **desde el día siguiente se pausa la emisión**: la API
+responde `402 payment_required` a facturas, boletas y notas de crédito nuevas. Las pruebas
+con `sk_test_`, las consultas, las descargas y las anulaciones siguen funcionando, y al pagar
+se reactiva al instante.
+
 Ve tu consumo del mes, empresa por empresa, en la [consola](/console/consumo).

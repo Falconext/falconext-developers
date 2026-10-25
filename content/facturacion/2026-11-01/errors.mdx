@@ -36,7 +36,7 @@ para que puedas manejarlo de forma programática.
 | `202` | Accepted | El comprobante quedó en cola para SUNAT. El resultado llega por webhook. |
 | `400` | Bad Request | La solicitud está mal formada. |
 | `401` | Unauthorized | API key ausente o inválida. |
-| `402` | Payment Required | Tu cuenta superó el tope de crédito del mes. |
+| `402` | Payment Required | Tienes un cobro vencido (`payment_required`): no se emiten comprobantes hasta que lo pagues en la consola. Probar, consultar y anular siguen funcionando. |
 | `403` | Forbidden | La key no puede usar ese emisor. |
 | `404` | Not Found | El recurso no existe. |
 | `409` | Conflict | Conflicto de estado o de idempotencia. |
