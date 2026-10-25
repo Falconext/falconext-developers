@@ -3,6 +3,7 @@ import { ArrowLeft } from "lucide-react";
 import { mypeApi } from "@/lib/mype-api";
 import { CodeBlock } from "@/components/ui/code-block";
 import { ESTADO } from "../estado";
+import { PasarProduccion } from "./pasar-produccion";
 import type { Empresa } from "../actions";
 
 export const metadata = { title: "Empresa — Consola" };
@@ -55,12 +56,23 @@ export default async function EmpresaPage({ params }: { params: Promise<{ id: st
         <section className="rounded-xl border border-app bg-surface p-5">
           <h2 className="text-sm font-semibold text-fg">Estado</h2>
           <p className="mt-3 text-sm text-muted">{estado?.detalle}</p>
-          {e.status === "pending_setup" && (
+          {e.status === "pending_setup" && <PasarProduccion id={e.id} razonSocial={e.legal_name} ruc={e.ruc} />}
+          {e.status === "pending" && e.available_at && (
             <p className="mt-3 text-sm text-muted">
-              <strong className="text-fg">Pasar a producción:</strong> muy pronto lo harás desde aquí en un par de pasos. Mientras
-              tanto, escríbenos y lo activamos:{" "}
+              Lista aproximadamente el{" "}
+              <strong className="text-fg">
+                {new Date(e.available_at).toLocaleString("es-PE", { timeZone: "America/Lima", dateStyle: "medium", timeStyle: "short" })}
+              </strong>
+            </p>
+          )}
+          {e.status === "not_authorized" && e.status_detail && (
+            <p className="mt-3 text-sm text-rose-300">SUNAT dijo: {e.status_detail}</p>
+          )}
+          {(e.status === "not_authorized" || e.status === "pending") && (
+            <p className="mt-3 text-sm text-muted">
+              ¿Algo no cuadra?{" "}
               <a className="font-medium text-violet-400 hover:text-violet-300" href="https://wa.me/51955184284" target="_blank" rel="noreferrer">
-                WhatsApp
+                Escríbenos por WhatsApp
               </a>
               .
             </p>

@@ -9,7 +9,7 @@ export type Empresa = {
   legal_name: string;
   trade_name?: string;
   address?: string;
-  environment: "test" | "production";
+  environment: "test" | "live";
   status: "pending_setup" | "pending" | "active" | "not_authorized";
   status_detail?: string;
   available_at?: string;
@@ -26,5 +26,20 @@ export async function agregarEmpresa(ruc: string): Promise<{ ok: true; empresa: 
     return { ok: true, empresa };
   } catch (e: any) {
     return { ok: false, error: e?.message ?? "No se pudo agregar la empresa." };
+  }
+}
+
+/** Pasa la empresa a producción. No se puede deshacer: va con `confirm`. */
+export async function pasarAProduccion(id: string): Promise<{ ok: true; empresa: Empresa } | { ok: false; error: string }> {
+  try {
+    const empresa = await mypeApi<Empresa>(`/facturacion/consola/empresas/${encodeURIComponent(id)}/produccion`, {
+      method: "POST",
+      body: JSON.stringify({ confirm: true }),
+    });
+    revalidatePath("/console/empresas");
+    revalidatePath(`/console/empresas/${id}`);
+    return { ok: true, empresa };
+  } catch (e: any) {
+    return { ok: false, error: e?.message ?? "No se pudo pasar a producción." };
   }
 }
