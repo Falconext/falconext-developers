@@ -1,5 +1,7 @@
 import { mypeApi } from "@/lib/mype-api";
 import { Pagos, type Cobro } from "./pagos";
+import { DatosFacturacionForm } from "./datos-facturacion";
+import type { DatosFacturacion } from "./actions";
 
 export const metadata = { title: "Consumo — Consola" };
 export const dynamic = "force-dynamic";
@@ -16,7 +18,7 @@ type Consumo = {
 
 const soles = (n: number) => `S/ ${Number(n || 0).toFixed(2)}`;
 
-type Cobros = { online_payment: boolean; data: Cobro[] };
+type Cobros = { online_payment: boolean; billing_details_complete?: boolean; data: Cobro[] };
 
 export default async function ConsumoPage({
   searchParams,
@@ -53,6 +55,13 @@ export default async function ConsumoPage({
     cobros = await mypeApi<Cobros>("/facturacion/consola/cobros");
   } catch {
     // Sin la lista de cobros la página sigue sirviendo para ver el consumo.
+  }
+
+  let datos: DatosFacturacion | null = null;
+  try {
+    datos = await mypeApi<DatosFacturacion>("/facturacion/consola/datos-facturacion");
+  } catch {
+    datos = null;
   }
 
   return (
@@ -136,7 +145,10 @@ export default async function ConsumoPage({
             El pago no se completó. Puedes intentarlo de nuevo.
           </div>
         )}
-        <Pagos cobros={cobros.data} enLinea={cobros.online_payment} />
+        <h3 className="mb-2 mt-6 text-sm font-semibold text-fg">Datos de facturación</h3>
+        <DatosFacturacionForm inicial={datos} />
+        <h3 className="mb-2 mt-6 text-sm font-semibold text-fg">Cobros</h3>
+        <Pagos cobros={cobros.data} enLinea={cobros.online_payment} datosCompletos={!!datos?.complete} />
       </section>
     </>
   );

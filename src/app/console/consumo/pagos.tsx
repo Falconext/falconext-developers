@@ -14,6 +14,7 @@ export type Cobro = {
   overdue: boolean;
   paid_at?: string;
   payment_method?: string;
+  invoice_number?: string;
 };
 
 const soles = (n: number) => `S/ ${Number(n || 0).toFixed(2)}`;
@@ -47,7 +48,7 @@ function BotonPagar({ id }: { id: number }) {
   );
 }
 
-export function Pagos({ cobros, enLinea }: { cobros: Cobro[]; enLinea: boolean }) {
+export function Pagos({ cobros, enLinea, datosCompletos }: { cobros: Cobro[]; enLinea: boolean; datosCompletos: boolean }) {
   if (cobros.length === 0) {
     return (
       <p className="rounded-xl border border-dashed border-app p-6 text-sm text-muted">
@@ -91,7 +92,16 @@ export function Pagos({ cobros, enLinea }: { cobros: Cobro[]; enLinea: boolean }
                 )}
               </td>
               <td className="px-5 py-3 text-right">
+                {c.status === "paid" && c.invoice_number && (
+                  <a href={`/console/consumo/factura/${c.id}`} className="text-sm font-medium text-violet-400 hover:text-violet-300">
+                    {c.invoice_number.startsWith("F") ? "Factura" : "Boleta"} {c.invoice_number}
+                  </a>
+                )}
+                {c.status === "pending" && !datosCompletos && (
+                  <span className="text-xs text-subtle">Completa tus datos de facturación para pagar</span>
+                )}
                 {c.status === "pending" &&
+                  datosCompletos &&
                   (enLinea ? (
                     <BotonPagar id={c.id} />
                   ) : (
