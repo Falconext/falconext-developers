@@ -5,17 +5,13 @@ import { useRouter } from "next/navigation";
 import { Rocket, X } from "lucide-react";
 import { pasarAProduccion } from "../actions";
 
-/** Lo que la empresa tiene que tener hecho en SUNAT antes del pase. */
+/**
+ * Igual que el pase a producción de los resellers en Vendify: la afiliación a
+ * QPSE es de la cuenta de Krezka y QPSE hace el alta ante SUNAT, así que al
+ * cliente no se le pide ningún trámite en SUNAT SOL. Lo único que se le pide
+ * es que la empresa sea suya: aquí no hay un reseller que responda por él.
+ */
 const REQUISITOS = [
-  {
-    id: "emisor",
-    texto: "La empresa ya es emisor electrónico en SUNAT (emite facturas o boletas electrónicas, o se afilia ahora).",
-  },
-  {
-    id: "pse",
-    texto:
-      "En SUNAT SOL, con la Clave SOL de la empresa, autorizó a QPSE como su Proveedor de Servicios Electrónicos (PSE). Es quien firma y envía los comprobantes por Krezka.",
-  },
   {
     id: "titular",
     texto: "Soy el representante de esta empresa o tengo su autorización para facturar a su nombre.",
@@ -65,7 +61,7 @@ export function PasarProduccion({ id, razonSocial, ruc }: { id: string; razonSoc
               </button>
             </div>
 
-            <p className="mb-3 text-sm text-muted">Antes de seguir, confirma que esto ya está hecho:</p>
+            <p className="mb-3 text-sm text-muted">Nosotros registramos la empresa en el proveedor de facturación (QPSE) y hacemos el alta ante SUNAT. Solo confirma:</p>
             <ul className="flex flex-col gap-2.5">
               {REQUISITOS.map((r) => (
                 <li key={r.id}>
@@ -85,7 +81,8 @@ export function PasarProduccion({ id, razonSocial, ruc }: { id: string; razonSoc
             <div className="mt-4 rounded-lg border border-amber-signal/30 bg-amber-signal/10 p-3 text-sm text-fg">
               <strong>No se puede deshacer.</strong> Desde ahí, lo que emitas con una clave <code className="font-mono text-xs">sk_live_</code> va a
               SUNAT con valor legal y se cobra según el consumo. Las claves <code className="font-mono text-xs">sk_test_</code> siguen sirviendo para probar.
-              SUNAT tarda unas 24 horas en habilitar la empresa: hasta entonces la API responde que está en revisión y no emite.
+              SUNAT tarda unas 24 horas en habilitar la empresa: hasta entonces la API responde que está en revisión y no emite. Si SUNAT
+              la rechaza, aquí verás el motivo.
             </div>
 
             {error && <p className="mt-3 text-sm text-rose-400">{error}</p>}
