@@ -11,12 +11,12 @@ real sin riesgo.
 | Operación | Con `sk_test_…` |
 | --- | --- |
 | Leer productos, sedes, categorías, ventas | Datos **reales**. |
-| Crear un producto | Valida todo (sku repetido, lote, fotos…) y devuelve el producto **simulado**, con `id: null`. |
-| Editar un producto | Valida y devuelve el producto actual más `changes`, lo que habría cambiado. |
+| Crear un producto | Valida todo (sku repetido, lote, fotos…) y devuelve el producto **simulado**, con `id: null` y los mismos campos que el real. |
+| Editar un producto | Valida y devuelve el producto como quedaría con tus cambios. |
 | Ajustar stock | Calcula `previous_quantity` y `quantity` sin mover nada. |
 | Registrar una venta | Revisa producto, tallas, stock, lote y cliente; devuelve totales, IGV y `number_preview`. **No se emite.** |
 
-Toda respuesta simulada trae `livemode: false`. Los errores son los mismos que en real: si
+Toda respuesta trae `livemode`: `false` si es simulada y `true` si es real; los campos son los mismos, así tu código no cambia al pasar a la clave real. Los errores son los mismos que en real: si
 una venta de prueba dice `insufficient_stock`, la real también lo diría.
 
 <Callout type="note" title="Pruébala sin escribir código">

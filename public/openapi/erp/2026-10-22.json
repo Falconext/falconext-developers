@@ -666,7 +666,7 @@
         ],
         "summary": "Listar ventas",
         "operationId": "listSales",
-        "description": "Las ventas que llegaron por la API, de la más reciente.",
+        "description": "Todas las ventas del negocio —POS, tienda virtual, celular y API—, de la más reciente. Las que no entraron por la API tienen id `doc_<n>`; las de la API, `sale_…`. Una nota de venta ya convertida a boleta o factura no sale (ya cuenta su formal), salvo con `include_converted=true`.",
         "parameters": [
           {
             "name": "limit",
@@ -676,7 +676,8 @@
               "minimum": 1,
               "maximum": 100,
               "default": 20
-            }
+            },
+            "description": "Cuántas por página."
           },
           {
             "name": "starting_after",
@@ -684,7 +685,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "Id de la última venta de la página anterior."
+            "description": "El `next_cursor` de la página anterior."
           },
           {
             "name": "external_id",
@@ -692,7 +693,115 @@
             "schema": {
               "type": "string"
             },
-            "description": "Tu número de pedido."
+            "description": "Tu número de pedido (solo ventas de la API)."
+          },
+          {
+            "name": "source",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "all",
+                "api",
+                "online_store",
+                "pos"
+              ],
+              "default": "all"
+            },
+            "description": "Por dónde entró la venta. `pos` = todo lo que no es API ni tienda virtual."
+          },
+          {
+            "name": "document_type",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "receipt",
+                "invoice",
+                "sales_note"
+              ]
+            },
+            "description": "Boleta, factura o nota de venta."
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "registered",
+                "pending",
+                "sent",
+                "accepted",
+                "observed",
+                "rejected",
+                "reconciling",
+                "voided"
+              ]
+            },
+            "description": "Estado. `registered` = nota de venta vigente."
+          },
+          {
+            "name": "location_id",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Solo de esa sede."
+          },
+          {
+            "name": "created_from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "description": "Desde ese día (hora de Lima), AAAA-MM-DD."
+          },
+          {
+            "name": "created_to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "description": "Hasta ese día incluido (hora de Lima), AAAA-MM-DD."
+          },
+          {
+            "name": "customer_document",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "DNI, RUC o CE exacto del cliente."
+          },
+          {
+            "name": "channel",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "web",
+                "whatsapp",
+                "tiktok",
+                "facebook",
+                "instagram",
+                "tienda_fisica",
+                "llamada",
+                "referido",
+                "otro"
+              ]
+            },
+            "description": "Canal de venta."
+          },
+          {
+            "name": "include_converted",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            },
+            "description": "Incluir notas de venta ya convertidas."
           }
         ],
         "responses": {
@@ -1475,6 +1584,7 @@
                     "items": {
                       "type": "string",
                       "enum": [
+                        "sale.created",
                         "sale.accepted",
                         "sale.observed",
                         "sale.rejected",
@@ -1864,6 +1974,44 @@
           },
           "403": {
             "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      }
+    },
+    "/bank_accounts": {
+      "get": {
+        "tags": [
+          "Datos"
+        ],
+        "summary": "Cuentas bancarias",
+        "operationId": "listBankAccounts",
+        "description": "Las cuentas activas del negocio, para `payment.bank_account_id` en una venta por transferencia. Del número solo van los últimos 4 dígitos.",
+        "responses": {
+          "200": {
+            "description": "Las cuentas",
+            "content": {
+              "application/json": {
+                "example": {
+                  "object": "list",
+                  "data": [
+                    {
+                      "object": "bank_account",
+                      "id": 12,
+                      "bank": "BCP",
+                      "alias": "Cuenta principal",
+                      "currency": "PEN",
+                      "account_type": "AHORROS",
+                      "last4": "4521",
+                      "linked_methods": [
+                        "yape"
+                      ]
+                    }
+                  ],
+                  "has_more": false,
+                  "next_cursor": null
+                }
+              }
+            }
           }
         }
       }
@@ -2709,6 +2857,10 @@
               },
               "reference": {
                 "type": "string"
+              },
+              "bank_account_id": {
+                "type": "integer",
+                "description": "Cuenta donde entró el pago (GET /bank_accounts). En transferencia es obligatorio si el negocio tiene varias cuentas en soles; con una sola se usa esa."
               }
             }
           },
@@ -2720,6 +2872,22 @@
             "type": "string",
             "maxLength": 64,
             "description": "Tu número de pedido. Único: si llega otra vez, 409 duplicate_external_id con el id de la venta."
+          },
+          "channel": {
+            "type": "string",
+            "enum": [
+              "web",
+              "whatsapp",
+              "tiktok",
+              "facebook",
+              "instagram",
+              "tienda_fisica",
+              "llamada",
+              "referido",
+              "otro"
+            ],
+            "default": "web",
+            "description": "Por dónde llegó la venta (reporte Ventas por canal)."
           }
         }
       },
@@ -2737,11 +2905,31 @@
           },
           "id": {
             "type": "string",
-            "nullable": true
+            "nullable": true,
+            "description": "`sale_…` si entró por la API; `doc_<n>` si vino del POS, la tienda virtual o el celular."
           },
           "external_id": {
             "type": "string",
             "nullable": true
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "api",
+              "online_store",
+              "pos"
+            ],
+            "description": "Por dónde entró la venta."
+          },
+          "channel": {
+            "type": "string",
+            "nullable": true,
+            "description": "Canal de venta (WEB, WHATSAPP, TIKTOK…)."
+          },
+          "online_store_order": {
+            "type": "string",
+            "nullable": true,
+            "description": "Código de seguimiento del pedido de la tienda virtual."
           },
           "document_type": {
             "type": "string",
@@ -2807,7 +2995,27 @@
             "type": "string"
           },
           "payment": {
-            "type": "object"
+            "type": "object",
+            "properties": {
+              "method": {
+                "type": "string",
+                "nullable": true,
+                "enum": [
+                  "cash",
+                  "card",
+                  "yape",
+                  "plin",
+                  "transfer",
+                  "other",
+                  null
+                ]
+              },
+              "raw": {
+                "type": "string",
+                "nullable": true,
+                "description": "El medio tal como lo guardó el POS (BBVA, IZIPAY, MIXTO…)."
+              }
+            }
           },
           "pdf_url": {
             "type": "string",
@@ -2930,6 +3138,11 @@
           },
           "has_more": {
             "type": "boolean"
+          },
+          "next_cursor": {
+            "type": "string",
+            "nullable": true,
+            "description": "Mándalo como `starting_after` para la página siguiente."
           }
         }
       }
