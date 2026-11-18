@@ -803,6 +803,15 @@
             "description": "DNI, RUC o CE exacto del cliente."
           },
           {
+            "name": "seller_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Solo las ventas de ese vendedor (el `seller.id` de cada venta)."
+          },
+          {
             "name": "channel",
             "in": "query",
             "schema": {
@@ -3055,7 +3064,53 @@
           },
           "customer": {
             "type": "object",
-            "nullable": true
+            "nullable": true,
+            "description": "null si la venta fue a CLIENTES VARIOS.",
+            "properties": {
+              "document_type": {
+                "type": "string",
+                "nullable": true
+              },
+              "document_number": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "new",
+                  "returning"
+                ],
+                "nullable": true,
+                "description": "`new` si es su primera compra en el negocio (por DNI/RUC); `returning` si ya había comprado antes. No cuentan anuladas ni rechazadas. null en modo prueba."
+              },
+              "first_purchase_at": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true,
+                "description": "Fecha de su primera compra. null en modo prueba."
+              }
+            }
+          },
+          "seller": {
+            "type": "object",
+            "nullable": true,
+            "description": "Quién la vendió: el vendedor de campo si se le atribuyó; si no, el usuario que la registró. null si entró por la API.",
+            "properties": {
+              "id": {
+                "type": "integer"
+              },
+              "name": {
+                "type": "string",
+                "nullable": true
+              },
+              "email": {
+                "type": "string",
+                "nullable": true
+              }
+            }
           },
           "items": {
             "type": "array",
