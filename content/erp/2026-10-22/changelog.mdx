@@ -5,6 +5,12 @@ group: API
 order: 11
 ---
 
+## 2026-11-18 (vendedor y cliente nuevo)
+
+- Cada venta trae `seller` (`id`, `name`, `email`): quién la vendió. `GET /sales` acepta `seller_id`.
+- `customer.type` (`new` o `returning`) y `customer.first_purchase_at`: si es la primera compra de
+  ese DNI o RUC en el negocio.
+
 ## 2026-11-18 (fechas y sincronización)
 
 - `GET /products`, `GET /customers` y `GET /sales`: `updated_since` (solo lo que cambió desde un

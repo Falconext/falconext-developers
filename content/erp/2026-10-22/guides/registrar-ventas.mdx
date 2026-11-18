@@ -99,12 +99,29 @@ curl "https://api.krezka.com/api/v1/erp/sales?created_from=2026-11-01&created_to
 ```
 
 Filtros: `created_from` y `created_to` (días de Lima, `AAAA-MM-DD`), `document_type`, `status`,
-`location_id`, `channel`, `source`, `customer_document` y `external_id`. Para la página siguiente
+`location_id`, `channel`, `source`, `customer_document`, `seller_id` y `external_id`. Para la página siguiente
 manda `starting_after` con el `next_cursor` que recibiste. Una nota de venta que ya se convirtió en
 boleta o factura no sale (ya cuenta su formal); `include_converted=true` la trae.
 
 Para saber qué cambió desde la última vez (ventas nuevas, aceptadas por SUNAT, anuladas aunque
 sean de hace meses), manda `updated_since` con el `synced_at` de tu consulta anterior.
+
+## Quién vendió y si el cliente es nuevo
+
+Cada venta trae `seller` con `id`, `name` y `email` de quien la vendió: el vendedor de campo si se
+le atribuyó la venta y, si no, el usuario que la registró en el POS o el celular. Las ventas que
+entran por la API traen `seller: null`. Para las de un vendedor, filtra con `seller_id`.
+
+En `customer`, `type` vale `new` si es la primera compra de ese DNI o RUC en el negocio y
+`returning` si ya había comprado antes; `first_purchase_at` es la fecha de esa primera compra.
+No cuentan las ventas anuladas ni las rechazadas por SUNAT. Con CLIENTES VARIOS, `customer` es
+`null`.
+
+```json
+"customer": { "document_type": "ruc", "document_number": "20123456789", "name": "Empresa Cliente SAC",
+              "type": "returning", "first_purchase_at": "2026-03-02T15:20:00.000Z" },
+"seller": { "id": 642, "name": "María Torres", "email": "maria@tunegocio.pe" }
+```
 
 ## El PDF
 
