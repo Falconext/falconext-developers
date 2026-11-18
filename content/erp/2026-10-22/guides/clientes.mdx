@@ -17,6 +17,13 @@ order: 25
 - `PATCH /customers/{id}` cambia nombre, correo, celular o dirección (`null` borra el dato). El documento no se cambia.
 - No hace falta crear el cliente antes de vender: `POST /sales` con `customer` lo busca o lo crea solo.
 
+### Clientes nuevos o editados
+
+`GET /customers` acepta `created_from` y `created_to` (días de Lima) y `updated_since` (un
+instante ISO 8601, como el `synced_at` de tu consulta anterior). Los clientes creados antes del
+18-11-2026 tienen `created_at: null`: entonces no se guardaba la fecha de alta. Con
+`updated_since` también vienen los desactivados (`status: "inactive"`).
+
 ## Categorías y marcas
 
 ```bash

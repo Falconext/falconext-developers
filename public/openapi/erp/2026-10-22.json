@@ -100,6 +100,33 @@
               "type": "string"
             },
             "description": "El next_cursor de la página anterior."
+          },
+          {
+            "name": "created_from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "description": "Creados desde ese día (Lima), AAAA-MM-DD."
+          },
+          {
+            "name": "created_to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "description": "Creados hasta ese día incluido (Lima)."
+          },
+          {
+            "name": "updated_since",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "description": "Solo lo que cambió desde ese instante. Usa el `synced_at` de la consulta anterior."
           }
         ],
         "responses": {
@@ -802,6 +829,15 @@
               "default": false
             },
             "description": "Incluir notas de venta ya convertidas."
+          },
+          {
+            "name": "updated_since",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "description": "Solo lo que cambió desde ese instante. Usa el `synced_at` de la consulta anterior."
           }
         ],
         "responses": {
@@ -1334,6 +1370,33 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "created_from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "description": "Creados desde ese día (Lima), AAAA-MM-DD."
+          },
+          {
+            "name": "created_to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "description": "Creados hasta ese día incluido (Lima)."
+          },
+          {
+            "name": "updated_since",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "description": "Solo lo que cambió desde ese instante. Usa el `synced_at` de la consulta anterior."
           }
         ],
         "responses": {
@@ -2376,6 +2439,19 @@
             "items": {
               "$ref": "#/components/schemas/Variant"
             }
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "inactive",
+              "deleted"
+            ]
           }
         }
       },
@@ -2397,6 +2473,11 @@
           "next_cursor": {
             "type": "string",
             "nullable": true
+          },
+          "synced_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Mándalo como `updated_since` la próxima vez."
           }
         }
       },
@@ -3044,6 +3125,11 @@
           "created_at": {
             "type": "string",
             "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
           }
         }
       },
@@ -3087,6 +3173,23 @@
           "address": {
             "type": "string",
             "nullable": true
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "inactive"
+            ]
           }
         }
       },
@@ -3143,6 +3246,11 @@
             "type": "string",
             "nullable": true,
             "description": "Mándalo como `starting_after` para la página siguiente."
+          },
+          "synced_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Mándalo como `updated_since` la próxima vez."
           }
         }
       }

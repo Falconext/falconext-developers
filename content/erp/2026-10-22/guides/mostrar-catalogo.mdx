@@ -26,7 +26,28 @@ curl "https://api.krezka.com/api/v1/erp/products?published=true&limit=50" \
 `search` busca por palabras en el nombre, el sku y los códigos de barras, incluidos los de
 cada talla y de cada paquete: escanear el código de una caja encuentra el producto.
 
-<Callout type="note" title="Mantén tu web al día">
-Lee el catálogo cada cierto tiempo (por ejemplo cada 10 minutos) o justo antes de mostrar un
-producto. Krezka es la fuente de verdad: si vendes en tu tienda física, el stock ya cambió.
+## Mantén tu web al día: pide solo lo que cambió
+
+No hace falta traer todo el catálogo cada vez. Cada lista devuelve `synced_at`, el momento de
+la consulta. La primera vez recorre todas las páginas sin filtros y guarda ese `synced_at`;
+desde ahí pide solo lo que cambió:
+
+```bash
+curl "https://api.krezka.com/api/v1/erp/products?updated_since=2026-11-18T10:30:00.000Z&limit=100" \
+  -H "Authorization: Bearer sk_live_…"
+```
+
+Un producto "cambió" si cambió su precio, su nombre, su oferta, una talla, su stock en una sede
+(una venta en tu tienda física cuenta) o una reserva. Guarda el nuevo `synced_at` y repite cada
+pocos minutos.
+
+Con `updated_since` también llegan los productos desactivados o eliminados, con
+`status: "inactive"` o `"deleted"`: sácalos de tu web.
+
+Para ver los productos **creados** en un rango usa `created_from` y `created_to` (días de Lima,
+`AAAA-MM-DD`).
+
+<Callout type="note" title="Productos de antes del 18-11-2026">
+Los que no se tocaron desde esa fecha no tienen fecha de cambio (`updated_at: null`) y no
+salen con `updated_since` hasta que cambien. Por eso la primera carga va sin filtros.
 </Callout>

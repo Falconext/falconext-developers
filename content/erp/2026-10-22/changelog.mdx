@@ -5,6 +5,13 @@ group: API
 order: 11
 ---
 
+## 2026-11-18 (fechas y sincronización)
+
+- `GET /products`, `GET /customers` y `GET /sales`: `updated_since` (solo lo que cambió desde un
+  instante) y `synced_at` en la respuesta. Productos y clientes: `created_from` y `created_to`.
+- Productos, clientes y ventas traen `updated_at`; productos y clientes, `status` (con
+  `updated_since` llegan también los desactivados). Clientes: `created_at`.
+
 ## 2026-11-18
 
 - `GET /sales` trae **todas** las ventas del negocio (POS, tienda virtual, celular y API), con
