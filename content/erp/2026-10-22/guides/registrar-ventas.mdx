@@ -103,6 +103,9 @@ Filtros: `created_from` y `created_to` (días de Lima, `AAAA-MM-DD`), `document_
 manda `starting_after` con el `next_cursor` que recibiste. Una nota de venta que ya se convirtió en
 boleta o factura no sale (ya cuenta su formal); `include_converted=true` la trae.
 
+Para saber qué cambió desde la última vez (ventas nuevas, aceptadas por SUNAT, anuladas aunque
+sean de hace meses), manda `updated_since` con el `synced_at` de tu consulta anterior.
+
 ## El PDF
 
 `GET /sales/{id}/pdf?format=a4` (o `ticket`, `a5`) devuelve el enlace al PDF, el mismo que
