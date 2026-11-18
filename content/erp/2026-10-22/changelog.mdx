@@ -5,6 +5,18 @@ group: API
 order: 11
 ---
 
+## 2026-11-18
+
+- `GET /sales` trae **todas** las ventas del negocio (POS, tienda virtual, celular y API), con
+  `source` y `channel`. Filtros nuevos: `created_from`, `created_to`, `document_type`, `status`,
+  `location_id`, `channel`, `source`, `customer_document`, `include_converted`. Devuelve `next_cursor`.
+- Las ventas que no entraron por la API se consultan, se descargan en PDF y se anulan con su id `doc_<n>`.
+- `POST /sales`: `payment.bank_account_id` (transferencias) y `channel`. Nuevo `GET /bank_accounts`.
+- Arreglado: una venta por transferencia fallaba si el negocio tenía cuentas bancarias.
+- `Idempotency-Key`: usar la misma clave en otra ruta, o con una clave de otro entorno, da `409 idempotency_key_reused`.
+- Los errores de duplicado traen el id: `error.id` (categoría, marca, cliente) y `error.sale_id` (`duplicate_external_id`).
+- Productos y clientes aceptan `starting_after` (además de `cursor`).
+
 ## 2026-10-22 — Beta (actualización)
 
 - Anular ventas: `POST /sales/{id}/void` (nota de crédito si la boleta o factura ya fue aceptada).

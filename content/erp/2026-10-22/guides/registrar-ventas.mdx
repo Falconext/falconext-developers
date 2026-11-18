@@ -60,6 +60,15 @@ factura, manda cada línea como ítem libre, sin cargar nada en Krezka:
 - `unit`: unidad de SUNAT, `NIU` por defecto; `ZZ` para servicios.
 - No se mueve stock en Krezka; el cobro sí queda en tu caja.
 
+## Cómo pagó y por dónde llegó
+
+- `payment.method`: `cash`, `card`, `yape`, `plin` o `transfer`; `payment.reference`, el N° de operación.
+- **Transferencia:** di a qué cuenta entró con `payment.bank_account_id` (los ids salen de
+  `GET /bank_accounts`). Si tu negocio tiene una sola cuenta en soles, se usa esa; con varias y
+  sin `bank_account_id` recibes `400 bank_account_required`. Yape y Plin toman solos su cuenta vinculada.
+- `channel`: por dónde llegó la venta (`web`, `whatsapp`, `tiktok`, `facebook`, `instagram`…).
+  Si no lo mandas queda `web`. Es lo que ves en el reporte **Ventas por canal**.
+
 ## Antes de emitir
 
 Krezka revisa todo y, si algo falla, **no emite nada** ni gasta número: producto activo,
@@ -77,6 +86,22 @@ curl https://api.krezka.com/api/v1/erp/sales/sale_HKA2DiFel0Cz \
 
 `status` pasa a `accepted`. Si queda en `pending` con `sunat_message`, Krezka reintenta solo.
 Mejor aún: registra un [webhook](/erp/2026-10-22/webhooks) y te avisamos.
+
+## Listar tus ventas (todas, no solo las de la API)
+
+`GET /sales` trae **todas** las ventas del negocio: POS, tienda virtual, celular y API. Cada una
+dice `source` (`pos`, `online_store` o `api`). Las de la API tienen id `sale_…`; el resto, `doc_<n>`.
+Las dos sirven igual en `GET /sales/{id}`, en el PDF y para anular.
+
+```bash
+curl "https://api.krezka.com/api/v1/erp/sales?created_from=2026-11-01&created_to=2026-11-30&document_type=invoice&limit=50" \
+  -H "Authorization: Bearer sk_live_…"
+```
+
+Filtros: `created_from` y `created_to` (días de Lima, `AAAA-MM-DD`), `document_type`, `status`,
+`location_id`, `channel`, `source`, `customer_document` y `external_id`. Para la página siguiente
+manda `starting_after` con el `next_cursor` que recibiste. Una nota de venta que ya se convirtió en
+boleta o factura no sale (ya cuenta su formal); `include_converted=true` la trae.
 
 ## El PDF
 
