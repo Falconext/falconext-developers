@@ -12,12 +12,19 @@ servidor y Krezka te avisa cada cambio con un `POST` firmado.
 
 | Evento | Cuándo |
 | --- | --- |
+| `sale.created` | Hay una venta nueva: del POS, la tienda virtual, el celular o la API. |
 | `sale.accepted` | SUNAT aceptó la boleta o factura. Ya puedes enviarle el PDF al cliente. |
 | `sale.observed` | SUNAT la aceptó con observaciones. |
 | `sale.rejected` | SUNAT la rechazó. `sunat_message` dice por qué. |
 | `sale.voided` | Se anuló (con su `credit_note` si era boleta o factura). |
 
-Cada evento trae la venta completa en `data`, igual que `GET /sales/{id}`.
+Cada evento trae la venta completa en `data`, igual que `GET /sales/{id}`: con `source`
+(`pos`, `online_store` o `api`) sabes de dónde vino.
+
+Se avisan **todas** las ventas del negocio, no solo las que creó tu web, desde que registras
+tu primer endpoint (las de antes no se mandan). Primero llega `sale.created`; después, cada
+cambio de estado. Una nota de venta no va a SUNAT: solo recibe `sale.created` y, si se anula,
+`sale.voided`.
 
 ## Registrar tu dirección
 
@@ -25,7 +32,7 @@ Cada evento trae la venta completa en `data`, igual que `GET /sales/{id}`.
 curl -X POST https://api.krezka.com/api/v1/erp/webhook_endpoints \
   -H "Authorization: Bearer sk_live_…" \
   -H "Content-Type: application/json" \
-  -d '{ "url": "https://tu-web.pe/krezka/avisos", "events": ["sale.accepted", "sale.rejected", "sale.voided"] }'
+  -d '{ "url": "https://tu-web.pe/krezka/avisos", "events": ["sale.created", "sale.accepted", "sale.rejected", "sale.voided"] }'
 ```
 
 La respuesta trae el `secret` (`whsec_…`) **una sola vez**: guárdalo, lo necesitas para

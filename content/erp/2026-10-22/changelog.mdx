@@ -16,6 +16,9 @@ order: 11
 - `Idempotency-Key`: usar la misma clave en otra ruta, o con una clave de otro entorno, da `409 idempotency_key_reused`.
 - Los errores de duplicado traen el id: `error.id` (categoría, marca, cliente) y `error.sale_id` (`duplicate_external_id`).
 - Productos y clientes aceptan `starting_after` (además de `cursor`).
+- Webhooks: evento nuevo `sale.created` y avisos de **todas** las ventas (POS, tienda y API), desde que registras tu endpoint.
+- Clave de prueba: las respuestas simuladas tienen los mismos campos que las reales; `livemode` viene siempre.
+- Dos llamadas con el mismo `external_id` a la vez: solo una emite. Dos ventas distintas iguales (mismo producto y monto) ya no se rechazan como doble envío.
 
 ## 2026-10-22 — Beta (actualización)
 
